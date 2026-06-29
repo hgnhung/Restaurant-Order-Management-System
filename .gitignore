@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual Environment
+venv/
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+
+# Python cache
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
