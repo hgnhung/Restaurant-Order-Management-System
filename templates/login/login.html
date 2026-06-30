@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Order Management System</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <h1>RESTAURANT ORDER MANAGEMENT SYSTEM</h1>
+        <p>Select employee to begin shift</p>
+    </div>
+
+    <div class="main">
+
+        <!-- LEFT -->
+        <div class="left-panel">
+
+            <h2>Active Employees</h2>
+
+            <div class="employee-list">
+
+                {% for employee in employees %}
+
+                <div class="employee-card"
+                data-userid="{{ employee.userID }}"
+                onclick="selectEmployee(this)">
+
+                    <div class="avatar">
+                        
+                    </div>
+
+                    <h3>{{ employee.fullName }}</h3>
+
+                    <p>{{ employee.position }}</p>
+
+                    <small>ID: {{ employee.userID }}</small>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-panel">
+
+            <h3>Enter 4-Digit PIN</h3>
+
+            <div class="pin-display">
+
+                <span>○</span>
+                <span>○</span>
+                <span>○</span>
+                <span>○</span>
+
+            </div>
+
+            <div class="keypad">
+
+                <button onclick="pressNumber(1)">1</button>
+                <button onclick="pressNumber(2)">2</button>
+                <button onclick="pressNumber(3)">3</button>
+
+                <button onclick="pressNumber(4)">4</button>
+                <button onclick="pressNumber(5)">5</button>
+                <button onclick="pressNumber(6)">6</button>
+
+                <button onclick="pressNumber(7)">7</button>
+                <button onclick="pressNumber(8)">8</button>
+                <button onclick="pressNumber(9)">9</button>
+
+                <button onclick="deletePin()">⌫</button>
+                <button onclick="pressNumber(0)">0</button>
+
+                <button class="login-btn" onclick="login()">
+                    Login
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+
+</html>
