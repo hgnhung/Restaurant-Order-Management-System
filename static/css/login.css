@@ -11,10 +11,11 @@
 
 body{
     background:#f3f4f6;
-    height:100vh;
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
+    padding:20px;
 }
 
 /* ==========================
@@ -23,7 +24,7 @@ body{
 
 .container{
 
-    width:1200px;
+    width:1000px;
     background:white;
 
     border-radius:15px;
@@ -46,13 +47,13 @@ body{
 
     text-align:center;
 
-    padding:25px;
+    padding:20px;
 
 }
 
 .header h1{
 
-    font-size:30px;
+    font-size:32px;
 
     margin-bottom:10px;
 
