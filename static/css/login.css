@@ -121,7 +121,7 @@ body{
 
     text-align:center;
 
-    padding:20px;
+    padding:25px 15px;
 
     cursor:pointer;
 
@@ -143,35 +143,24 @@ body{
 
     color:white;
 
+    border-color:#1e88e5;
+
 }
 
-.avatar{
+.employee-card.active p,
+.employee-card.active small{
 
-    width:70px;
-
-    height:70px;
-
-    margin:auto;
-
-    background:#ddd;
-
-    border-radius:50%;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:30px;
-
-    margin-bottom:15px;
+    color:white;
 
 }
 
 .employee-card h3{
 
-    margin-bottom:10px;
+    margin-bottom:8px;
+
+    font-size:22px;
+
+    color:#333;
 
 }
 
@@ -179,11 +168,17 @@ body{
 
     color:#666;
 
+    margin-bottom:8px;
+
+    font-size:16px;
+
 }
 
 .employee-card small{
 
     color:#888;
+
+    font-size:14px;
 
 }
 

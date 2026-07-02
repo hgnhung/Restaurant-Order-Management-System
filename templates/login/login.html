@@ -34,18 +34,14 @@
                 <div class="employee-card"
                 data-userid="{{ employee.userID }}"
                 onclick="selectEmployee(this)">
+                
+                <h3>{{ employee.fullName }}</h3>
+                
+                <p>{{ employee.position }}</p>
 
-                    <div class="avatar">
-                        
-                    </div>
+                <small>ID: {{ employee.userID }}</small>
 
-                    <h3>{{ employee.fullName }}</h3>
-
-                    <p>{{ employee.position }}</p>
-
-                    <small>ID: {{ employee.userID }}</small>
-
-                </div>
+            </div>
 
                 {% endfor %}
 
