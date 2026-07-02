@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Gọi món - Bàn {{ table_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; display: flex; height: 100vh; background-color: #f8f9fa; }
+        .menu-pane { width: 60%; padding: 20px; overflow-y: auto; box-sizing: border-box; }
+        .order-pane { width: 40%; background: white; border-left: 2px solid #e0e0e0; padding: 20px; display: flex; flex-direction: column; box-sizing: border-box; }
+        .dish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px; }
+        .dish-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: white; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dish-card h4 { margin: 5px 0; color: #2c3e50; }
+        .btn-add { background-color: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .order-list { flex-grow: 1; overflow-y: auto; margin-top: 15px; list-style: none; padding: 0; }
+        .order-item { padding: 10px 0; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; }
+        .btn-confirm { background-color: #27ae60; color: white; width: 100%; padding: 15px; font-size: 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .btn-back { background-color: #7f8c8d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="menu-pane">
+        <a href="/waiter/tables" class="btn-back">⬅ Quay lại Sơ đồ bàn</a>
+        <h3>Thực đơn gọi món - Bàn {{ table_number }}</h3>
+        
+        <div class="dish-grid">
+            {% for dish in dishes %}
+            <div class="dish-card">
+                <h4>{{ dish.Name }}</h4>
+                <p style="color: #e74c3c; font-weight: bold;">{{ dish.Price }} VNĐ</p>
+                <form action="/waiter/add-to-cart" method="POST">
+                    <input type="hidden" name="table_number" value="{{ table_number }}">
+                    <input type="hidden" name="dish_id" value="{{ dish.DishID }}">
+                    Số lượng: <input type="number" name="quantity" value="1" min="1" style="width: 45px; padding: 3px; text-align: center; margin-bottom: 8px;"><br>
+                    <input type="text" name="special_note" placeholder="Ghi chú (ít cay, không hành...)" style="width: 80%; padding: 5px; margin-bottom: 8px; border: 1fr solid #ccc; border-radius: 4px;"><br>
+                    <button type="submit" class="btn-add">+ Thêm món</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="order-pane">
+        <h3>Danh sách món đã chọn</h3>
+        <ul class="order-list">
+            {% if cart_items %}
+                {% for item in cart_items %}
+                <li class="order-item">
+                    <div>
+                        <strong>{{ item.name }}</strong>
+                        {% if item.note %}<br><small style="color: #7f8c8d;">📝 {{ item.note }}</small>{% endif %}
+                    </div>
+                    <div>x{{ item.quantity }}</div>
+                </li>
+                {% endfor %}
+            {% else %}
+                <p style="color: #95a5a6; text-align: center; margin-top: 40px;">Chưa có món nào được chọn</p>
+            {% endif %}
+        </ul>
+        
+        <form action="/waiter/confirm-order" method="POST">
+            <input type="hidden" name="table_number" value="{{ table_number }}">
+            <button type="submit" class="btn-confirm" {% if not cart_items %}disabled style="background-color:#bdc3c7;"{% endif %}>
+                XÁC NHẬN & GỬI XUỐNG BẾP
+            </button>
+        </form>
+    </div>
+</body>
+</html>

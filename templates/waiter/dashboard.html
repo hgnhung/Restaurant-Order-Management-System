@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển Phục vụ</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; box-sizing: border-box; }
+        .dashboard-container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; max-width: 500px; width: 100%; }
+        h1 { color: #2c3e50; margin-bottom: 10px; }
+        p { color: #7f8c8d; margin-bottom: 30px; }
+        .btn-menu { display: block; background-color: #3498db; color: white; text-decoration: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; margin-bottom: 15px; transition: background 0.2s; }
+        .btn-menu:hover { background-color: #2980b9; }
+        .btn-logout { display: block; background-color: #e74c3c; color: white; text-decoration: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+        .btn-logout:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Xin chào, Phục vụ!</h1>
+        <p>Chào mừng bạn đến với Hệ thống quản lý gọi món Tablet</p>
+        
+        <!-- Đường dẫn này sẽ gọi hàm view_tables() hiển thị sơ đồ bàn ăn -->
+        <a href="/waiter/tables" class="btn-menu">🪑 Xem Sơ đồ bàn & Gọi món</a>
+        
+        <a href="/" class="btn-logout">Đăng xuất</a>
+    </div>
+</body>
+</html>
