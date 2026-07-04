@@ -1,6 +1,6 @@
 # routes/waiter.py
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
-from waiter_controller import (
+from controllers.waiter_controller import (
     get_menu_categories, get_dishes_by_category, search_dishes,
     create_order, get_active_orders, get_order_details,
     confirm_order, modify_order, cancel_order, update_order_status_to_served,

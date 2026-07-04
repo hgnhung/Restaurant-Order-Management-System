@@ -1,0 +1,141 @@
+﻿<!-- admin/menu.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu Management - OMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin/dashboard">OMS - ADMIN</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/menu">Menu Management</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/staff">Employee Management</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/report">Revenue Report</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+            <strong>Thông báo:</strong> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Form Thêm / Cập Nhật Món Ăn -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-3">
+                    <h4 class="fw-bold text-primary mb-3">Dish Information</h4>
+                    <form action="/admin/menu" method="POST" id="dishForm">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Dish ID (dishID)</label>
+                            <input type="text" name="dishID" id="dishID" class="form-control form-control-sm" required placeholder="e.g., DISH01">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Dish Name</label>
+                            <input type="text" name="name" id="name" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Image URL</label>
+                            <input type="text" name="image" id="image" class="form-control form-control-sm">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Description</label>
+                            <textarea name="description" id="description" class="form-control form-control-sm" rows="2"></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Ingredients</label>
+                            <input type="text" name="ingredients" id="ingredients" class="form-control form-control-sm" placeholder="Separated by commas">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Price (VND)</label>
+                            <input type="number" step="0.01" name="price" id="price" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Category ID (categoryID)</label>
+                            <input type="text" name="categoryID" id="categoryID" class="form-control form-control-sm" value="CATE01">
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="isAvailable" id="isAvailable" checked>
+                            <label class="form-check-label small" for="isAvailable">Ready to serve</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="action" value="add" class="btn btn-success btn-sm fw-bold">Add New Dish</button>
+                            <button type="submit" name="action" value="update" class="btn btn-warning btn-sm fw-bold">Update Dish</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-3">
+                    <h4 class="fw-bold text-dark mb-3">Current Menu List</h4>
+                    <p class="text-muted small">* Mẹo: Click chọn trực tiếp vào dòng của món ăn để điền nhanh thông tin lên Form chỉnh sửa.</p>
+                    <table class="table table-hover align-middle table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Dish Name</th>
+                                <th>Price</th>
+                                <th>Ingredients</th>
+                                <th>Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dish in dishes %}
+                            <tr style="cursor: pointer;" onclick="selectDishRow('{{ dish.dishID }}', '{{ dish.name|e }}', '{{ dish.image|e }}', '{{ dish.description|e }}', '{{ dish.ingredients|e }}', '{{ dish.price }}', '{{ dish.categoryID }}', {{ 'true' if dish.isAvailable else 'false' }})">
+                                <td class="fw-bold">{{ dish.dishID }}</td>
+                                <td>{{ dish.name }}</td>
+                                <td class="text-danger fw-bold">{{ dish.price }}</td>
+                                <td class="text-muted small">{{ dish.ingredients }}</td>
+                                <td>
+                                    {% if dish.isAvailable %}
+                                    <span class="badge bg-success">Available</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Unavailable</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center" onclick="event.stopPropagation();">
+                                    <a href="/admin/menu/delete/{{ dish.dishID }}" class="btn btn-danger btn-sm px-2 py-0" onclick="return confirm('Are you sure you want to delete this dish?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectDishRow(id, name, image, desc, ing, price, catId, available) {
+            document.getElementById('dishID').value = id;
+            document.getElementById('name').value = name;
+            document.getElementById('image').value = image;
+            document.getElementById('description').value = desc;
+            document.getElementById('ingredients').value = ing;
+            document.getElementById('price').value = price;
+            document.getElementById('categoryID').value = catId;
+            document.getElementById('isAvailable').checked = available;
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

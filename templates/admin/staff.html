@@ -1,0 +1,142 @@
+﻿<!-- admin/staff.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Management - OMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin/dashboard">OMS - ADMIN</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/menu">Menu Management</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/staff">Employee Management</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/report">Revenue Report</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+            <strong>System:</strong> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 p-3">
+                    <h4 class="fw-bold text-primary mb-3">Employee Profile</h4>
+                    <form action="/admin/staff" method="POST" id="staffForm">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Employee ID (CHAR(3))</label>
+                            <input type="text" maxlength="3" name="userID" id="userID" class="form-control form-control-sm" required placeholder="e.g., E07">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" name="fullName" id="fullName" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Phone Number</label>
+                            <input type="text" name="phone" id="phone" class="form-control form-control-sm">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Position</label>
+                            <select name="position" id="position" class="form-select form-select-sm">
+                                <option value="Waiter">Waiter</option>
+                                <option value="Kitchen Staff">Kitchen Staff</option>
+                                <option value="Cashier">Cashier</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">Security PIN (4 digits)</label>
+                            
+                            <input type="text"
+                                   minlength="4"
+                                   maxlength="4"
+                                   pattern="[0-9]{4}"
+                                   name="pin"
+                                   id="pin"
+                                   class="form-control form-control-sm"
+                                   required
+                                   placeholder="e.g., 1234"
+                                   title="Security PIN must be exactly 4 digits (0-9)">
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="isActive" value="1" id="isActive" checked>
+                            <label class="form-check-label small fw-bold" for="isActive">Account Active Status</label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" name="action" value="add" class="btn btn-success btn-sm fw-bold">Add Employee</button>
+                            <button type="submit" name="action" value="update" class="btn btn-warning btn-sm fw-bold">Update Information</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 p-3">
+                    <h4 class="fw-bold text-dark mb-3">Restaurant Staff List</h4>
+                   
+
+                    <table class="table table-hover align-middle table-sm">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Full Name</th>
+                                <th>Phone</th>
+                                <th>Position</th>
+                                <th>PIN</th>
+                                <th>Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_list %}
+                            <tr>
+                                <td class="fw-bold text-secondary">#{{ staff[0] }}</td>
+                                <td class="fw-bold">{{ staff[1] }}</td>
+                                <td>{{ staff[2] if staff[2] else 'N/A' }}</td>
+                                <td><span class="badge bg-info text-dark">{{ staff[3] }}</span></td>
+                                <td><code>{{ staff[4] }}</code></td>
+                                <td>
+                                    {% if staff[5] == 1 %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Account Locked</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if staff[5] == 1 %}
+                                    <a href="/admin/staff/deactivate/{{ staff[0] }}" class="btn btn-outline-danger btn-sm px-2 py-0" onclick="return confirm('Are you sure you want to deactivate this account?')">Deactivate</a>
+                                    {% else %}
+                                    <span class="text-muted small">Locked</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

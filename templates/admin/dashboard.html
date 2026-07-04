@@ -1,17 +1,39 @@
+﻿<!-- admin/dashboard.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - OMS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
 
-<h1>Admin Dashboard</h1>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow shadow-sm mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin/dashboard">OMS - ADMIN</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link active" href="/admin/dashboard">Overview</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/menu">Menu Management</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/staff">Employee Management</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/report">Revenue Report</a></li>
+                </ul>
+                <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
 
-<p>Login Successful!</p>
+    <!-- Main Content -->
+    <div class="container">
+        <div class="p-5 mb-4 bg-white rounded-3 border shadow-sm">
+            <div class="container-fluid py-5">
+                <h1 class="display-5 fw-bold text-success">Login Successful!</h1>
+                <p class="col-md-8 fs-4 text-muted">Welcome back to the restaurant management system. Please select a category from the navigation bar to start managing your tasks.</p>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
-
-<button onclick="window.location='/logout'">
-    Logout
-</button>
