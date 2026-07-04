@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giao diện Nhà bếp - Kitchen Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
+        h1 { color: #333; text-align: center; }
+        .order-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; }
+        .order-card { background: white; border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #ff9800; }
+        .order-id { font-weight: bold; font-size: 1.2em; margin-bottom: 10px; color: #ff9800; }
+        .food-list { margin: 10px 0; padding-left: 20px; }
+        .btn-done { background-color: #4CAF50; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-done:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+
+    <h1>DANH SÁCH ĐƠN HÀNG - NHÀ BẾP</h1>
+
+    <div class="order-container">
+        <div class="order-card">
+            <div class="order-id">Bàn số: 05 (#101)</div>
+            <p><strong>Thời gian:</strong> 23:30</p>
+            <ul class="food-list">
+                <li>2 Phở Bò Chín</li>
+                <li>1 Quẩy Giòn</li>
+                <li>1 Coca Cola</li>
+            </ul>
+            <button class="btn-done">Hoàn thành món</button>
+        </div>
+
+        <div class="order-card">
+            <div class="order-id">Bàn số: 12 (#102)</div>
+            <p><strong>Thời gian:</strong> 23:35</p>
+            <ul class="food-list">
+                <li>1 Cơm Rang Dưa Bò</li>
+                <li>1 Trà Đá</li>
+            </ul>
+            <button class="btn-done">Hoàn thành món</button>
+        </div>
+    </div>
+
+</body>
+</html>
