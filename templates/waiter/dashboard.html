@@ -65,13 +65,14 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <h1>Hello, Waiter!</h1>
+        <!-- Lấy mã số nhân viên ID động từ Session đăng nhập thực tế của nhóm -->
+        <h1>Hello, {{ session.get('userID', 'Waiter') }}!</h1>
         <p>Welcome to the Tablet Order Management System</p>
         
-        <!-- This link routes to the view_tables() function to display the table layout -->
+        <!-- Đường dẫn chính xác trỏ tới router /waiter/tables trong file waiter.py sạch -->
         <a href="/waiter/tables" class="btn-menu">🪑 View Tables & Take Orders</a>
         
-        <!-- Added a visual icon to match the menu button style -->
+        <!-- Nút Đăng xuất quay trở lại màn hình đăng nhập hệ thống -->
         <a href="/" class="btn-logout">🚪 Log Out</a>
     </div>
 </body>

@@ -7,13 +7,14 @@ class OrderModel:
         self.conn = db_connection
 
     def create_order(self, table_number, user_id):
+        """Hàm khởi tạo đơn hàng gốc của nhóm"""
         try:
             cursor = self.conn.cursor()
             
             # Generate a strictly 6-character orderID to match char(6) constraint in SSMS
             order_id = "ORD" + "".join(random.choices("0123456789", k=3))
             order_date = datetime.now()
-            status = "Confirmed"
+            status = "Confirmed" # Trạng thái gốc của nhóm bạn
             
             # Execute insert query matching the group's current Orders table structure
             insert_query = """
@@ -34,19 +35,7 @@ class OrderModel:
             return None
 
     def add_order_details(self, order_id, dish_id, quantity, special_note=""):
-        try:
-            cursor = self.conn.cursor()
-            # Execute insert query matching the group's current OrderDetail table structure
-            sql = "INSERT INTO OrderDetail (orderID, dishID, quantity, specialNote) VALUES (?, ?, ?, ?)"
-            cursor.execute(sql, (order_id, dish_id, int(quantity), str(special_note)))
-            self.conn.commit()
-            return True
-        except Exception as e:
-            print("--- ADD ORDER DETAILS ERROR ---:", e)
-            self.conn.rollback()
-            return False
-
-    def add_order_details(self, order_id, dish_id, quantity, special_note=""):
+        """Hàm thêm món ăn vào bảng chi tiết gốc của nhóm (Bản tối ưu chống trùng khóa chính)"""
         try:
             cursor = self.conn.cursor()
             

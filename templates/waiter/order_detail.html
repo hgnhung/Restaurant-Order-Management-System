@@ -5,46 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details - Table {{ table_number }}</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .details-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 600px; width: 100%; box-sizing: border-box; }
-        .header { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-back { background-color: #7f8c8d; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 14px; }
-        .item-list { list-style: none; padding: 0; margin: 0; }
-        .order-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed #eee; }
-        .item-info { flex-grow: 1; }
-        .item-name { font-weight: bold; color: #2c3e50; }
-        .item-note { color: #e67e22; font-size: 13px; margin-top: 4px; }
-        .item-qty { color: #7f8c8d; font-weight: bold; }
-        .btn-add-more { display: block; background-color: #2ecc71; color: white; text-decoration: none; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 25px; font-size: 16px; }
+        /* CSS Reset and Viewport Fixes */
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        
+        /* Main Container Card */
+        .container { width: 100%; max-width: 500px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+        
+        /* Metadata Header Section */
+        .header-section { border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-section h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 22px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; color: #4a5568; }
+        
+        /* Dynamic Status Badge */
+        .badge-status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        .status-confirmed { background-color: #ebf5fb; color: #2980b9; }
+        .status-preparing { background-color: #f4ecf7; color: #8e44ad; }
+        .status-ready { background-color: #eafaf1; color: #27ae60; }
+        .status-served { background-color: #f2f4f4; color: #7f8c8d; }
+        
+        /* Ordered Items List */
+        .item-list { list-style: none; padding: 0; margin: 20px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        .dish-row { padding: 12px 0; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .dish-name { font-weight: 600; color: #2c3e50; }
+        .dish-note { color: #7f8c8d; font-size: 13px; margin-top: 3px; font-style: italic; }
+        .dish-qty { font-weight: bold; color: #34495e; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 14px; }
+        
+        /* Touch-Friendly Action Buttons */
+        .action-block { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background 0.2s; text-align: center; text-decoration: none; }
+        .btn-serve { background-color: #27ae60; color: white; }
+        .btn-serve:hover { background-color: #219653; }
+        
+        .row-buttons { display: flex; gap: 12px; }
+        .btn-modify { background-color: #3498db; color: white; flex: 1; }
+        .btn-modify:hover { background-color: #2980b9; }
+        .btn-cancel { background-color: #e74c3c; color: white; flex: 1; }
+        .btn-cancel:hover { background-color: #c0392b; }
+        
+        .btn-back-dashboard { background-color: #95a5a6; color: white; }
+        .btn-back-dashboard:hover { background-color: #7f8c8d; }
+        
+        /* Disabled State styling for grayed-out look */
+        .btn-action:disabled, .btn-action.disabled-style { background-color: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; pointer-events: none; }
     </style>
 </head>
 <body>
-    <div class="details-container">
-        <div class="header">
-            <h3 style="margin: 0; color: #2c3e50;">Order Details - Table {{ table_number }}</h3>
-            <a href="/waiter/tables" class="btn-back">⬅ Back</a>
+
+<div class="container">
+    {% if order %}
+        <!-- ĐÁP ỨNG ĐẶT TẢ: Hiển thị đầy đủ Metadata Order ID, Thời gian tạo, Trạng thái đơn hàng -->
+        <div class="header-section">
+            <h3>Order Details — Table {{ table_number }}</h3>
+            <div class="meta-grid">
+                <div><strong>Order ID:</strong> {{ order.OrderID }}</div>
+                <div><strong>Date:</strong> {{ order.OrderDate }}</div>
+                <div style="grid-column: span 2; margin-top: 5px;">
+                    <strong>Status:</strong> 
+                    <!-- Đổi màu sắc nhãn động dựa trên trạng thái thực tế từ SQL Server -->
+                    <span class="badge-status 
+                        {% if order.Status == 'Confirmed' %}status-confirmed
+                        {% elif order.Status == 'Preparing' %}status-preparing
+                        {% elif order.Status == 'Ready' %}status-ready
+                        {% else %}status-served{% endif %}">
+                        {{ order.Status }}
+                    </span>
+                </div>
+            </div>
         </div>
 
+        <h5 style="margin: 0; color: #34495e; font-size: 16px;">Ordered Items</h5>
         <ul class="item-list">
             {% if items %}
                 {% for item in items %}
-                <li class="order-item">
-                    <div class="item-info">
-                        <div class="item-name">{{ item.name }}</div>
+                <li class="dish-row">
+                    <div>
+                        <span class="dish-name">{{ item.name }}</span>
                         {% if item.specialNote %}
-                        <div class="item-note">📝 Note: {{ item.specialNote }}</div>
+                            <div class="dish-note">📝 Ghi chú: {{ item.specialNote }}</div>
                         {% endif %}
                     </div>
-                    <div class="item-qty">x{{ item.quantity }}</div>
+                    <span class="dish-qty">x{{ item.quantity }}</span>
                 </li>
                 {% endfor %}
             {% else %}
-                <p style="text-align: center; color: #95a5a6; margin: 30px 0;">No items found for this active order.</p>
+                <p style="color: #95a5a6; text-align: center; padding: 20px 0; margin: 0;">No items found in this order.</p>
             {% endif %}
         </ul>
 
-        <!-- Nút bấm cho phép Phục vụ gọi thêm món mới cho bàn này -->
-        <a href="/waiter/order?table={{ table_number }}" class="btn-add-more">+ Add More Dishes</a>
-    </div>
+        <div class="action-block">
+            <!-- ĐỦ ĐIỀU KIỆN: Chỉ hiện nút MARK AS SERVED khi bếp báo chín xong (Status == 'Ready') -->
+            {% if order.Status == 'Ready' %}
+            <form action="/waiter/serve-order" method="POST" style="margin: 0;">
+                <input type="hidden" name="order_id" value="{{ order.OrderID }}">
+                <button type="submit" class="btn-action btn-serve">✓ MARK AS SERVED (ĐÃ PHỤC VỤ MÓN)</button>
+            </form>
+            {% endif %}
+
+            <div class="row-buttons">
+                <!-- CHỐT CHẶN TRẠNG THÁI (Use-case 4.6): Tự động mờ xám và khóa nút Sửa nếu đơn đã sang Preparing trở đi -->
+                <a href="/waiter/order?table={{ table_number }}" 
+                   class="btn-action btn-modify {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled-style{% endif %}">
+                   ✏ Modify Order
+                </a>
+
+                <!-- ẨN/KHÓA NÚT CANCEL: Tự động khóa tính năng nếu bếp đang nấu (Preparing) để bảo toàn quy trình nghiệp vụ -->
+                <form action="/waiter/cancel-order" method="POST" style="flex: 1; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                    <input type="hidden" name="order_id" value="{{ order.OrderID }}">
+                    <button type="submit" class="btn-action btn-cancel" 
+                            {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled{% endif %}>
+                            ❌ Cancel Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #95a5a6; padding: 40px 0;">No active order found for this table.</p>
+    {% endif %}
+    
+    <a href="/waiter/tables" class="btn-action btn-back-dashboard" style="margin-top: 12px;">Back to Table Map</a>
+</div>
+
 </body>
 </html>
