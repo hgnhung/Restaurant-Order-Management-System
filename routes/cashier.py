@@ -1,52 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Invoice Management - Cashier</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark px-3 justify-content-between">
-        <span class="navbar-brand mb-0 h1">Invoice Management <small class="text-muted" style="font-size: 12px;">CASHIER TERMINAL 01</small></span>
-        <span class="badge bg-secondary">✨ CASHIER WORKSPACE</span>
-    </nav>
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from controllers.cashier_controller import get_unpaid_invoices, get_invoice_detail, process_payment
 
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+cashier_bp = Blueprint('cashier', __name__)
 
-        <div class="row">
-            <div class="col-md-10 offset-md-1">
-                <h4 class="mb-3 text-secondary">Orders Ready for Billing</h4>
-                <div class="list-group shadow-sm">
-                    {% for inv in invoices %}
-                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
-                        <div>
-                            <h6 class="mb-1 text-primary">Order #{{ inv.order_id }}</h6>
-                            <p class="mb-0 text-muted" style="font-size: 13px;">
-                                📍 <strong>Table {{ inv.table_number }}</strong> | 🕒 {{ inv.order_date.strftime('%H:%M - %d/%m/%Y') if inv.order_date else '' }}
-                            </p>
-                        </div>
-                        <div class="text-end">
-                            <span class="d-block fw-bold text-danger fs-5 mb-2">${{ "{:,.2f}".format(inv.subtotal) }}</span>
-                            <a href="{{ url_for('cashier.view_invoice', order_id=inv.order_id) }}" class="btn btn-sm btn-outline-primary">
-                                Generate Invoice
-                            </a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="list-group-item text-center py-5 text-muted">
-                        No orders are currently waiting for billing.
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+@cashier_bp.route('/dashboard')
+def dashboard():
+    """Main cashier panel layout showing pending billing queues[cite: 463]."""
+    invoices = get_unpaid_invoices()
+    return render_template('cashier/dashboard.html', invoices=invoices)
+
+@cashier_bp.route('/invoice/<string:order_id>', methods=['GET', 'POST'])
+def view_invoice(order_id):
+    """Invoice visualization and billing action handler[cite: 474, 494]."""
+    invoice = get_invoice_detail(order_id)
+    if not invoice:
+        flash("Target order entity was either closed or doesn't exist.", "danger")
+        return redirect(url_for('cashier.dashboard'))
+        
+    if request.method == 'POST':
+        payment_method = request.form.get('payment_method') # Returns 'Cash' or 'Bank Transfer'
+        user_id = session.get('user_id', 1) # Falls back to mock session ID if auth is unlinked
+        
+        success, message = process_payment(order_id, payment_method, cashier_id=user_id)
+        if success:
+            flash(message, 'success')
+            return redirect(url_for('cashier.dashboard'))
+            
+    return render_template('cashier/invoice_detail.html', invoice=invoice)
