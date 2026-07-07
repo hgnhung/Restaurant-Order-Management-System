@@ -1,8 +1,9 @@
 from flask import Blueprint
-from controllers.kitchen_controller import dashboard
+from controllers.kitchen_controller import KitchenController
 
-kitchen_bp = Blueprint("kitchen", __name__)
+# Initialize kitchen blueprint with professional routing prefix
+kitchen_bp = Blueprint('kitchen', __name__, url_prefix='/kitchen')
 
-@kitchen_bp.route("/kitchen/dashboard")
-def kitchen_dashboard():
-    return dashboard()
+# Register application core endpoints mapping to kitchen processing units
+kitchen_bp.route('/dashboard', methods=['GET'])(KitchenController.get_dashboard)
+kitchen_bp.route('/update-status', methods=['POST'])(KitchenController.update_order_status)
