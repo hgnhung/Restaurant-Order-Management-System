@@ -1,46 +1,143 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giao diện Nhà bếp - Kitchen Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        h1 { color: #333; text-align: center; }
-        .order-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; }
-        .order-card { background: white; border-radius: 8px; padding: 15px; width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #ff9800; }
-        .order-id { font-weight: bold; font-size: 1.2em; margin-bottom: 10px; color: #ff9800; }
-        .food-list { margin: 10px 0; padding-left: 20px; }
-        .btn-done { background-color: #4CAF50; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-done:hover { background-color: #45a049; }
-    </style>
+    <title>Kitchen Staff Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans antialiased h-screen flex flex-col">
 
-    <h1>DANH SÁCH ĐƠN HÀNG - NHÀ BẾP</h1>
-
-    <div class="order-container">
-        <div class="order-card">
-            <div class="order-id">Bàn số: 05 (#101)</div>
-            <p><strong>Thời gian:</strong> 23:30</p>
-            <ul class="food-list">
-                <li>2 Phở Bò Chín</li>
-                <li>1 Quẩy Giòn</li>
-                <li>1 Coca Cola</li>
-            </ul>
-            <button class="btn-done">Hoàn thành món</button>
+    <header class="bg-[#1e293b] text-white px-6 py-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-2 font-bold text-lg tracking-wide">
+            <span>🍳</span> <span>KITCHEN MANAGEMENT SYSTEM</span>
         </div>
-
-        <div class="order-card">
-            <div class="order-id">Bàn số: 12 (#102)</div>
-            <p><strong>Thời gian:</strong> 23:35</p>
-            <ul class="food-list">
-                <li>1 Cơm Rang Dưa Bò</li>
-                <li>1 Trà Đá</li>
-            </ul>
-            <button class="btn-done">Hoàn thành món</button>
+        <div class="text-sm font-mono opacity-90 bg-[#334155] px-3 py-1 rounded" id="live-clock">
+            00:00:00
         </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <aside class="w-1/3 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-100">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Active Orders</h2>
+                <div class="flex space-x-2">
+                    <button class="px-4 py-1.5 text-xs font-bold rounded-full bg-blue-50 text-blue-600 border border-blue-200">ALL</button>
+                    <button class="px-4 py-1.5 text-xs font-bold rounded-full bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100">PENDING</button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto divide-y divide-gray-100">
+                {% for order in orders %}
+                <a href="?order_id={{ order.id }}" class="block p-4 transition hover:bg-gray-50 {% if selected_order and selected_order.id == order.id %}bg-blue-50/60 border-l-4 border-blue-600{% endif %}">
+                    <div class="flex justify-between items-start mb-1">
+                        <div>
+                            <span class="font-bold text-gray-800 text-sm block">Order #{{ order.order_number }}</span>
+                            <span class="text-xs text-gray-500">Table {{ order.table_number }}</span>
+                        </div>
+                        
+                        {% if order.status == 'Confirmed' %}
+                        <span class="px-2.5 py-1 text-[11px] font-bold uppercase rounded-full bg-amber-100 text-amber-700">Confirmed</span>
+                        {% elif order.status == 'Preparing' %}
+                        <span class="px-2.5 py-1 text-[11px] font-bold uppercase rounded-full bg-blue-100 text-blue-700">Preparing</span>
+                        {% else %}
+                        <span class="px-2.5 py-1 text-[11px] font-bold uppercase rounded-full bg-green-100 text-green-700">Ready</span>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center text-xs text-gray-400 mt-2">
+                        <span class="mr-1">⏱️</span> <span>{{ order.elapsed_time }} elapsed</span>
+                    </div>
+                </a>
+                {% else %}
+                <div class="p-8 text-center text-gray-400 text-sm">No active orders in the queue.</div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <main class="w-2/3 bg-gray-50 flex flex-col h-full p-6 overflow-y-auto">
+            {% if selected_order %}
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200/80 flex flex-col flex-1 overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex justify-between items-start">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-1">
+                            {% if selected_order.status == 'Confirmed' %}
+                            <span class="bg-amber-600 text-white text-xs font-bold uppercase px-3 py-0.5 rounded">Confirmed</span>
+                            {% elif selected_order.status == 'Preparing' %}
+                            <span class="bg-blue-600 text-white text-xs font-bold uppercase px-3 py-0.5 rounded">Preparing</span>
+                            {% endif %}
+                            <span class="text-xs text-gray-400 font-medium">DINE-IN</span>
+                        </div>
+                        <h1 class="text-lg font-bold text-gray-800">Order #{{ selected_order.order_number }}</h1>
+                        <p class="text-sm text-gray-500 font-medium">Table {{ selected_order.table_number }}</p>
+                    </div>
+
+                    <div class="bg-red-50 border border-red-100 rounded-lg p-3 text-right flex items-center space-x-3">
+                        <span class="text-xl">🚨</span>
+                        <div>
+                            <span class="text-[10px] font-bold text-red-400 uppercase tracking-wider block">Time Elapsed</span>
+                            <span class="text-sm font-mono font-bold text-red-600">{{ selected_order.elapsed_time }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 p-5 overflow-y-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-200 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                <th class="pb-3 w-16 text-center">QTY</th>
+                                <th class="pb-3">ITEM DETAILS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            {% for item in selected_order.items %}
+                            <tr class="align-top">
+                                <td class="py-4 font-bold text-gray-700 text-center text-base">{{ item.quantity }}</td>
+                                <td class="py-4">
+                                    <span class="font-semibold text-gray-800 text-base block">{{ item.name }}</span>
+                                    
+                                    {% if item.note %}
+                                    <div class="mt-1.5 inline-flex items-center space-x-1 px-2 py-0.5 rounded text-xs font-semibold {% if 'ALLERGY' in item.note.upper() or 'DỊ ỨNG' in item.note.upper() %}bg-red-50 text-red-600 border border-red-100{% else %}bg-blue-50 text-blue-600{% endif %}">
+                                        <span>⚠️</span> <span>{{ item.note }}</span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3">
+                    <form action="/kitchen/update-status" method="POST" class="w-full">
+                        <input type="hidden" name="order_id" value="{{ selected_order.id }}">
+                        
+                        {% if selected_order.status == 'Confirmed' %}
+                        <button type="submit" name="status" value="Preparing" class="w-full bg-blue-600 text-white font-bold py-3.5 px-6 rounded-lg shadow hover:bg-blue-700 transition tracking-wide text-sm flex justify-center items-center space-x-2">
+                            <span>⚡</span> <span>Start Preparing</span>
+                        </button>
+                        {% elif selected_order.status == 'Preparing' %}
+                        <button type="submit" name="status" value="Ready" class="w-full bg-[#047857] text-white font-bold py-3.5 px-6 rounded-lg shadow hover:bg-[#065f46] transition tracking-wide text-sm flex justify-center items-center space-x-2">
+                            <span>✓</span> <span>Mark Order as Ready</span>
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center flex-1 text-gray-400">
+                <span class="text-5xl mb-2">🍽️</span>
+                <p class="text-sm font-medium">Please select an order from the queue left side to view cooking instructions.</p>
+            </div>
+            {% endif %}
+        </main>
     </div>
 
+    <script>
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('live-clock').innerText = now.toTimeString().split(' ')[0];
+        }, 1000);
+    </script>
 </body>
 </html>
