@@ -1,325 +1,294 @@
-# waiter_controller.py
-import pyodbc
-import uuid
+# controllers/waiter_controller.py
+from models.order_model import OrderModel
+from models.audit_model import write_log
 import logging
 
 logger = logging.getLogger(__name__)
 
-DB_CONNECTION = (
-    "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=localhost;"
-    "DATABASE=RestaurantManagement;"
-    "Trusted_Connection=yes;"
-)
-
-def get_db_connection():
-    return pyodbc.connect(DB_CONNECTION)
-
-# ========================== MENU ==========================
-def get_menu_categories():
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT categoryID, categoryName, description FROM Category WHERE status = 'Active' ORDER BY categoryName")
-        return [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    finally:
-        conn.close()
-
-def get_dishes_by_category(category_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT dishID, name, image, description, ingredients, price, isAvailable
-            FROM Dish WHERE categoryID = ? AND isAvailable = 1 ORDER BY name
-        """, category_id)
-        return [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    finally:
-        conn.close()
-
-def search_dishes(keyword):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT dishID, name, image, description, ingredients, price, isAvailable 
-            FROM Dish WHERE name LIKE ? AND isAvailable = 1
-        """, f'%{keyword}%')
-        return [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    finally:
-        conn.close()
-
-# ========================== TABLE & ORDER ==========================
-def get_tables():
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT tableNumber, status FROM RestaurantTable ORDER BY tableNumber")
-        return [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    finally:
-        conn.close()
-
-def create_order(table_number, user_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status FROM RestaurantTable WHERE tableNumber = ?", table_number)
-        row = cursor.fetchone()
-        if not row or row[0] != 'Available':
-            return {"success": False, "message": "Table is not available"}
-
-        order_id = f"ORD{str(uuid.uuid4().int)[:6].upper()}"
-        cursor.execute("INSERT INTO Orders (orderID, tableNumber, status, orderDate) VALUES (?, ?, 'Pending', GETDATE())", order_id, table_number)
-        cursor.execute("UPDATE RestaurantTable SET status = 'Occupied' WHERE tableNumber = ?", table_number)
-        
-        conn.commit()
-        logger.info(f"Order {order_id} created for table {table_number}")
-        return {"success": True, "orderID": order_id, "message": "Order created successfully"}
-    except Exception as e:
-        conn.rollback()
-        logger.error(f"Create order error: {e}")
-        return {"success": False, "message": "Internal server error"}
-    finally:
-        conn.close()
-
-def get_active_orders():
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT o.orderID, o.tableNumber, o.status, o.orderDate, COUNT(od.dishID) as itemCount
-            FROM Orders o LEFT JOIN OrderDetail od ON o.orderID = od.orderID
-            WHERE o.status IN ('Pending', 'Confirmed', 'Preparing', 'Ready', 'Served')
-            GROUP BY o.orderID, o.tableNumber, o.status, o.orderDate
-            ORDER BY o.orderDate DESC
-        """)
-        return [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    finally:
-        conn.close()
-
-def get_order_details(order_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT orderID, tableNumber, status, orderDate FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row:
-            return None
-        order = dict(zip([col[0] for col in cursor.description], row))
-
-        cursor.execute("""
-            SELECT d.dishID, d.name, d.price, od.quantity, od.specialNote
-            FROM OrderDetail od JOIN Dish d ON od.dishID = d.dishID WHERE od.orderID = ?
-        """, order_id)
-        order['items'] = [dict(zip([col[0] for col in cursor.description], r)) for r in cursor.fetchall()]
-        return order
-    finally:
-        conn.close()
-
-# ========================== ITEM OPERATIONS ==========================
-def add_item_to_order(order_id, dish_id, quantity=1, special_note=None):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row or row[0] not in ['Pending', 'Confirmed']:
-            return {"success": False, "message": "Cannot add items"}
-
-        cursor.execute("""
-            MERGE OrderDetail AS target USING (VALUES (?, ?, ?, ?)) AS source 
-            ON target.orderID = source.orderID AND target.dishID = source.dishID
-            WHEN MATCHED THEN UPDATE SET quantity = target.quantity + ?, specialNote = ?
-            WHEN NOT MATCHED THEN INSERT VALUES (?, ?, ?, ?)
-        """, order_id, dish_id, quantity, special_note, quantity, special_note, order_id, dish_id, quantity, special_note)
-        conn.commit()
-        return {"success": True, "message": "Item added"}
-    except Exception:
-        conn.rollback()
-        return {"success": False, "message": "Failed to add item"}
-    finally:
-        conn.close()
-
-def remove_item_from_order(order_id, dish_id, user_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row or row[0] not in ['Pending', 'Confirmed']:
-            return {"success": False, "message": "Cannot modify order"}
-
-        cursor.execute("DELETE FROM OrderDetail WHERE orderID = ? AND dishID = ?", order_id, dish_id)
-        conn.commit()
-        return {"success": True, "message": "Item removed"}
-    except Exception:
-        conn.rollback()
-        return {"success": False, "message": "Failed to remove item"}
-    finally:
-        conn.close()
-
-# Các hàm confirm_order, modify_order, cancel_order, update_order_status_to_served, get_notifications giữ nguyên như phiên bản trước (đã ổn)
-
-def confirm_order(order_id, user_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row or row[0] != 'Pending':
-            return {"success": False, "message": "Only Pending orders can be confirmed"}
-
-        cursor.execute("SELECT COUNT(*) FROM OrderDetail WHERE orderID = ?", order_id)
-        if cursor.fetchone()[0] == 0:
-            return {"success": False, "message": "Cannot confirm empty order"}
-
-        cursor.execute("UPDATE Orders SET status = 'Confirmed' WHERE orderID = ?", order_id)
-        conn.commit()
-        return {"success": True, "message": "Order confirmed"}
-    except Exception:
-        conn.rollback()
-        return {"success": False, "message": "Internal error"}
-    finally:
-        conn.close()
-
-def modify_order(order_id, items, user_id):
-    if not items:
-        return {"success": False, "message": "No items provided"}
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row or row[0] not in ['Pending', 'Confirmed']:
-            return {"success": False, "message": "Cannot modify order"}
-
-        cursor.execute("DELETE FROM OrderDetail WHERE orderID = ?", order_id)
-        for item in items:
-            if item.get('quantity', 0) > 0:
-                cursor.execute("INSERT INTO OrderDetail (orderID, dishID, quantity, specialNote) VALUES (?, ?, ?, ?)",
-                             (order_id, item['dishID'], item['quantity'], item.get('specialNote')))
-        conn.commit()
-        return {"success": True, "message": "Order modified successfully"}
-    except Exception:
-        conn.rollback()
-        return {"success": False, "message": "Internal error"}
-    finally:
-        conn.close()
-
-def cancel_order(order_id, user_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status, tableNumber FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row or row[0] not in ['Pending', 'Confirmed']:
-            return {"success": False, "message": "Cannot cancel order"}
-
-        cursor.execute("UPDATE Orders SET status = 'Cancelled' WHERE orderID = ?", order_id)
-        cursor.execute("UPDATE RestaurantTable SET status = 'Available' WHERE tableNumber = ?", row[1])
-        conn.commit()
-        return {"success": True, "message": "Order cancelled"}
-    except Exception:
-        conn.rollback()
-        return {"success": False, "message": "Internal error"}
-    finally:
-        conn.close()
-
-def update_order_status_to_served(order_id, user_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT status FROM Orders WHERE orderID = ?", order_id)
-        row = cursor.fetchone()
-        if not row or row[0] != 'Ready':
-            return {"success": False, "message": "Order must be Ready"}
-
-        cursor.execute("UPDATE Orders SET status = 'Served' WHERE orderID = ?", order_id)
-        conn.commit()
-        return {"success": True, "message": "Order marked as Served"}
-    except Exception:
-        conn.rollback()
-        return {"success": False, "message": "Internal error"}
-    finally:
-        conn.close()
-
-def get_notifications(user_id):
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT orderID, tableNumber FROM Orders WHERE status = 'Ready' ORDER BY orderDate DESC")
-        return [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
-    finally:
-        conn.close()
-
-from models.order_model import OrderModel
-
 class WaiterController:
-    """Controller for all Waiter operations"""
+    """
+    Central controller class for the Waiter module.
+    Receives information from the Router, validates business logic, calls the Model,
+    and returns fully structured datasets formatted for the View.
+    """
 
     @staticmethod
-    def view_menu():
-        """View full menu organized by categories"""
-        return {
-            'categories': OrderModel.get_categories(),
-            'dishes': OrderModel.get_all_dishes()
-        }
+    def get_table_map_data():
+        """Process the data retrieval flow for the table map."""
+        try:
+            tables = OrderModel.get_all_tables()
+            if not tables:
+                # Fallback mock tables if DB is empty for demo purposes
+                tables = [
+                    {'tableNumber': 1, 'status': 'Occupied'},
+                    {'tableNumber': 2, 'status': 'Available'},
+                    {'tableNumber': 3, 'status': 'Occupied'},
+                    {'tableNumber': 4, 'status': 'Available'},
+                    {'tableNumber': 5, 'status': 'Available'},
+                    {'tableNumber': 6, 'status': 'Occupied'}
+                ]
+            
+            formatted_tables = []
+            for t in tables:
+                formatted_tables.append({
+                    'TableNumber': t['tableNumber'],
+                    'Status': t['status'].strip()
+                })
+            return {'success': True, 'tables': formatted_tables}
+        except Exception as e:
+            logger.error(f"Error in get_table_map_data: {e}")
+            # Fallback mock tables if DB connection fails
+            formatted_tables = [
+                {'TableNumber': 1, 'Status': 'Occupied'},
+                {'TableNumber': 2, 'Status': 'Available'},
+                {'TableNumber': 3, 'Status': 'Occupied'},
+                {'TableNumber': 4, 'Status': 'Available'},
+                {'TableNumber': 5, 'Status': 'Available'},
+                {'TableNumber': 6, 'Status': 'Occupied'}
+            ]
+            return {'success': True, 'tables': formatted_tables}
 
     @staticmethod
-    def search_dishes(keyword):
-        """Search dishes by keyword"""
-        return {'dishes': OrderModel.search_dishes(keyword)}
+    def get_ordering_view_data(table_number):
+        """
+        Gather metadata for the ordering view.
+        Simultaneously handles the menu list and current cart data.
+        """
+        try:
+            table_num = int(table_number)
+            try:
+                dishes = OrderModel.get_all_dishes()
+                if not dishes:
+                    raise Exception("Empty menu DB")
+            except Exception:
+                # Mock menu fallback
+                dishes = [
+                    {'dishID': 'D01', 'name': 'French Fries', 'price': 35000, 'categoryName': 'Appetizers', 'description': 'Crispy golden potato fries.', 'ingredients': 'Potato, salt'},
+                    {'dishID': 'D02', 'name': 'Spring Rolls', 'price': 45000, 'categoryName': 'Appetizers', 'description': 'Traditional fried spring rolls.', 'ingredients': 'Pork, shrimp, mushroom'},
+                    {'dishID': 'D03', 'name': 'Fried Rice', 'price': 75000, 'categoryName': 'Main Courses', 'description': 'Special rice fried with egg and seafood.', 'ingredients': 'Rice, egg, shrimp, squid'},
+                    {'dishID': 'D04', 'name': 'Beef Steak', 'price': 180000, 'categoryName': 'Main Courses', 'description': 'Premium beef with black pepper sauce.', 'ingredients': 'Beef, butter, pepper'},
+                    {'dishID': 'D05', 'name': 'Iced Peach Tea', 'price': 25000, 'categoryName': 'Beverages', 'description': 'Refreshing sweet iced peach tea.', 'ingredients': 'Tea, peach, sugar'},
+                    {'dishID': 'D06', 'name': 'Vanilla Ice Cream', 'price': 30000, 'categoryName': 'Desserts', 'description': 'Cold and creamy vanilla ice cream.', 'ingredients': 'Milk, vanilla extract'}
+                ]
+            
+            # Format dishes for the UI
+            for dish in dishes:
+                cat = str(dish.get('categoryName', '')).lower()
+                dish_name = str(dish.get('name', '')).lower()
+                
+                # Semantic categorization for HTML tabs
+                if 'appetizer' in cat or 'khai vị' in dish_name:
+                    dish['Category'] = 'appetizers'
+                elif 'dessert' in cat or 'tráng miệng' in dish_name:
+                    dish['Category'] = 'desserts'
+                elif 'drink' in cat or 'beverage' in cat or 'uống' in dish_name or 'tea' in dish_name:
+                    dish['Category'] = 'beverages'
+                else:
+                    dish['Category'] = 'main-courses'
+                    
+                dish['DishID'] = str(dish['dishID']).strip()
+                dish['Name'] = str(dish['name']).strip()
+                dish['Price'] = f"{dish['price']:,.0f}" if dish['price'] else "0"
+                dish['Description'] = str(dish.get('description', '')).strip()
+                dish['Ingredients'] = str(dish.get('ingredients', '')).strip()
+
+            active_order = OrderModel.get_active_order_for_table(table_num)
+            cart_items = []
+            
+            if active_order:
+                # Only show editable cart items if it hasn't gone to the kitchen yet
+                if active_order['status'] in ['Draft', 'Confirmed']:
+                    cart_items = OrderModel.get_cart_items(active_order['orderID'])
+
+            return {
+                'success': True, 
+                'dishes': dishes, 
+                'cart_items': cart_items,
+                'table_number': table_num
+            }
+        except Exception as e:
+            logger.error(f"Error in get_ordering_view_data: {e}")
+            return {'success': False, 'message': "System error loading menu data."}
 
     @staticmethod
-    def get_table_status():
-        """Get restaurant tables for order creation"""
-        return OrderModel.get_all_tables()
+    def process_add_to_cart(table_number, dish_id, quantity, special_note, user_id):
+        """Add item to order logic"""
+        try:
+            table_num = int(table_number)
+            qty = int(quantity)
+            
+            active_order = OrderModel.get_active_order_for_table(table_num)
+            
+            if active_order:
+                status = active_order['status']
+                if status in ['Preparing', 'Ready', 'Served']:
+                    return {
+                        'success': False, 
+                        'message': f"Cannot modify because the kitchen is processing (Status: {status})."
+                    }
+                order_id = active_order['orderID']
+            else:
+                # Create draft order and lock table
+                order_id = OrderModel.create_draft_order(table_num, user_id)
+                write_log(user_id, "Create Draft Order", f"Started Draft Order {order_id} for Table {table_num}")
+                
+            OrderModel.add_order_item(order_id, dish_id, qty, special_note)
+            write_log(user_id, "Add Item", f"Added Dish {dish_id} (x{qty}) to Order {order_id}")
+            return {'success': True, 'message': 'Item added to cart successfully.'}
+        except Exception as e:
+            logger.error(f"Error in process_add_to_cart: {e}")
+            return {'success': False, 'message': "Database access error."}
 
     @staticmethod
-    def create_new_order(table_number, waiter_id='E02'):
-        """Create new dine-in order"""
-        order_id = OrderModel.create_order(table_number, waiter_id)
-        return {'success': True, 'order_id': order_id, 'message': 'Order created successfully'}
+    def process_remove_from_cart(table_number, dish_id, special_note, user_id):
+        """Remove item from order logic"""
+        try:
+            table_num = int(table_number)
+            active_order = OrderModel.get_active_order_for_table(table_num)
+            
+            if not active_order:
+                return {'success': False, 'message': 'This table has no active order.'}
+                
+            status = active_order['status']
+            if status not in ['Draft', 'Confirmed']:
+                return {'success': False, 'message': f"Cannot remove item when order is in {status} status."}
+                
+            success, is_empty = OrderModel.remove_order_item(active_order['orderID'], dish_id, special_note)
+            
+            if success:
+                write_log(user_id, "Remove Item", f"Removed Dish {dish_id} from Order {active_order['orderID']}")
+                if is_empty:
+                    write_log(user_id, "Empty Draft Order", f"Order {active_order['orderID']} removed (Empty). Table {table_num} is now Available.")
+            
+            redirect_url = '/waiter/tables' if is_empty else f'/waiter/order?table={table_num}'
+            return {'success': True, 'redirect': redirect_url}
+        except Exception as e:
+            logger.error(f"Error in process_remove_from_cart: {e}")
+            return {'success': False, 'message': "Error removing item."}
 
     @staticmethod
-    def add_item_to_order(order_id, dish_id, quantity=1, special_note=None):
-        """Add dish to order"""
-        success = OrderModel.add_order_item(order_id, dish_id, quantity, special_note)
-        return {'success': success, 'message': 'Item added' if success else 'Cannot modify locked order'}
+    def process_update_cart(table_number, dish_id, special_note, action, user_id):
+        """Update quantity of an existing item in the cart (+1 or -1)"""
+        try:
+            table_num = int(table_number)
+            active_order = OrderModel.get_active_order_for_table(table_num)
+            
+            if not active_order:
+                return {'success': False, 'message': 'This table has no active order.'}
+                
+            status = active_order['status']
+            if status not in ['Draft', 'Confirmed']:
+                return {'success': False, 'message': f"Cannot modify item when order is in {status} status."}
+            
+            # Find current quantity
+            cart_items = OrderModel.get_cart_items(active_order['orderID'])
+            current_qty = 0
+            for item in cart_items:
+                if item['dish_id'] == dish_id and item['note'] == special_note:
+                    current_qty = item['quantity']
+                    break
+            
+            if current_qty == 0:
+                return {'success': False, 'message': 'Item not found in cart.'}
+                
+            new_qty = current_qty + 1 if action == 'increase' else current_qty - 1
+            
+            success, is_empty = OrderModel.update_order_item_qty(active_order['orderID'], dish_id, special_note, new_qty)
+            
+            if success:
+                if is_empty:
+                    write_log(user_id, "Empty Draft Order", f"Order {active_order['orderID']} removed (Empty). Table {table_num} is now Available.")
+                else:
+                    write_log(user_id, "Update Item", f"Updated Dish {dish_id} quantity to {new_qty} in Order {active_order['orderID']}")
+            
+            redirect_url = '/waiter/tables' if is_empty else f'/waiter/order?table={table_num}'
+            return {'success': True, 'redirect': redirect_url}
+        except Exception as e:
+            logger.error(f"Error in process_update_cart: {e}")
+            return {'success': False, 'message': "Error updating item."}
 
     @staticmethod
-    def remove_item_from_order(order_id, dish_id):
-        """Remove dish from order"""
-        success = OrderModel.remove_order_item(order_id, dish_id)
-        return {'success': success}
+    def process_confirm_order(table_number, user_id):
+        """Push order info to the kitchen"""
+        try:
+            table_num = int(table_number)
+            active_order = OrderModel.get_active_order_for_table(table_num)
+            
+            if not active_order:
+                return {'success': False, 'message': 'No order found to confirm.'}
+                
+            if active_order['status'] == 'Draft':
+                OrderModel.confirm_order(active_order['orderID'])
+                write_log(user_id, "Confirm Order", f"Sent Order {active_order['orderID']} for Table {table_num} to Kitchen.")
+                return {'success': True, 'message': 'Order confirmed and sent to kitchen!'}
+            else:
+                return {'success': False, 'message': f"Cannot re-confirm, order is currently: {active_order['status']}"}
+        except Exception as e:
+            logger.error(f"Error in process_confirm_order: {e}")
+            return {'success': False, 'message': "Error confirming order."}
+    @staticmethod
+    def get_notifications(user_id):
+        """Retrieve new notifications for the waiter"""
+        try:
+            notifications = OrderModel.get_notifications(user_id)
+            # Format for UI
+            formatted = []
+            for n in notifications:
+                formatted.append({
+                    'OrderID': n['orderID'].strip(),
+                    'TableNumber': n['tableNumber']
+                })
+            return {'success': True, 'notifications': formatted}
+        except Exception as e:
+            logger.error(f"Error in get_notifications: {e}")
+            return {'success': False, 'message': "Error loading notifications."}
 
     @staticmethod
-    def get_order_details(order_id):
-        """View order details"""
-        order = OrderModel.get_order_details(order_id)
-        return {'success': bool(order), 'order': order}
+    def get_order_detail_view(table_number):
+        """Retrieve full details for an active order."""
+        try:
+            table_num = int(table_number)
+            active_order = OrderModel.get_active_order_for_table(table_num)
+            
+            if not active_order:
+                return {'success': False, 'message': 'No active order found.'}
+                
+            details = OrderModel.get_order_details(active_order['orderID'])
+            
+            if details:
+                # Format specific fields for UI
+                details['OrderID'] = details.get('orderID')
+                details['OrderDate'] = details.get('orderDate').strftime("%Y-%m-%d %H:%M:%S") if details.get('orderDate') else ""
+                details['Status'] = details.get('status').strip()
+                details['TableNumber'] = details.get('tableNumber')
+                
+            return {'success': True, 'order': details, 'items': details.get('items', [])}
+        except Exception as e:
+            logger.error(f"Error in get_order_detail_view: {e}")
+            return {'success': False, 'message': "Error extracting order details."}
 
     @staticmethod
-    def get_active_orders():
-        """View list of active orders"""
-        orders = OrderModel.get_active_orders()
-        return {'success': True, 'orders': orders}
+    def process_cancel_order(order_id, user_id):
+        """Cancel an order before it's prepared"""
+        try:
+            success = OrderModel.cancel_order(order_id, user_id)
+            if success:
+                write_log(user_id, "Cancel Order", f"Cancelled Order {order_id}.")
+                return {'success': True, 'message': 'Order cancelled.'}
+            return {'success': False, 'message': 'Cannot cancel this order (it might be in preparation).'}
+        except Exception as e:
+            logger.error(f"Error in process_cancel_order: {e}")
+            return {'success': False, 'message': "Error cancelling order."}
 
     @staticmethod
-    def confirm_order(order_id, waiter_id='E02'):
-        """Confirm and send order to kitchen"""
-        success = OrderModel.confirm_order(order_id, waiter_id)
-        return {'success': success, 'message': 'Order confirmed and sent to kitchen'}
-
-    @staticmethod
-    def cancel_order(order_id, waiter_id='E02'):
-        """Cancel order (before preparation)"""
-        success = OrderModel.cancel_order(order_id, waiter_id)
-        return {'success': success, 'message': 'Order cancelled successfully' if success else 'Cannot cancel this order'}
-
-    @staticmethod
-    def update_to_served(order_id, waiter_id='E02'):
-        """Mark order as served after delivery to customer"""
-        success = OrderModel.update_to_served(order_id, waiter_id)
-        return {'success': success, 'message': 'Order marked as Served'}
-
+    def process_serve_order(order_id, user_id):
+        """Mark an order as served"""
+        try:
+            success = OrderModel.update_to_served(order_id, user_id)
+            if success:
+                write_log(user_id, "Serve Order", f"Marked Order {order_id} as Served.")
+                return {'success': True, 'message': 'Order served.'}
+            return {'success': False, 'message': 'Order must be Ready to be served.'}
+        except Exception as e:
+            logger.error(f"Error in process_serve_order: {e}")
+            return {'success': False, 'message': "Error serving order."}

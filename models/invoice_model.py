@@ -14,18 +14,15 @@ class InvoiceModel:
         cursor = conn.cursor()
 
         cursor.execute("""
-
             SELECT
-            o.orderID,
-            o.tableNumber,
-            o.orderDate
-        FROM Orders o
-        INNER JOIN Invoice i
-            ON o.orderID = i.orderID
-        LEFT JOIN Payment p
-            ON i.invoiceID = p.invoiceID
-        WHERE p.invoiceID IS NULL
-
+                o.orderID,
+                o.tableNumber,
+                o.orderDate
+            FROM Orders o
+            LEFT JOIN Invoice i ON o.orderID = i.orderID
+            LEFT JOIN Payment p ON i.invoiceID = p.invoiceID
+            WHERE o.status IN ('Ready', 'Served') 
+              AND p.paymentID IS NULL
         """)
 
         rows = cursor.fetchall()

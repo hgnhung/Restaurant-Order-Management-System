@@ -1,371 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Processing</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #0f172a;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        
+        .method-card {
+            transition: all 0.2s ease;
+        }
+        .method-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .peer:checked + .method-card {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .qr-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
+<body class="h-screen flex flex-col overflow-hidden">
 
-<body class="bg-gray-100">
-
-<div class="h-screen flex flex-col">
-
-    <!-- ================= HEADER ================= -->
-
-    <header class="bg-blue-700 text-white px-8 py-5 shadow">
-
-        <div class="flex justify-between items-center">
-
+    <!-- HEADER -->
+    <header class="glass-panel px-8 py-4 flex justify-between items-center z-10 relative">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                C
+            </div>
             <div>
-                <h1 class="text-3xl font-bold">
+                <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-800">
                     Payment Processing
                 </h1>
-
-                <p class="text-blue-100">
-                    Cashier Terminal
-                </p>
+                <p class="text-slate-500 text-sm font-medium">Cashier Terminal</p>
             </div>
-
-            <div class="flex items-center gap-4">
-
-                <div class="text-right">
-
-                    <div class="font-semibold">
-                        {{ session["employeeName"] }}
-                    </div>
-
-                    <div class="text-blue-200 text-sm">
-                        Cashier
-                    </div>
-
-                </div>
-
-                <a
-                    href="{{ url_for('cashier.get_invoice') }}"
-                    class="bg-white text-blue-700 px-5 py-2 rounded-lg font-semibold hover:bg-gray-100">
-
-                    Back
-
-                </a>
-
-                <a
-                    href="{{ url_for('auth.user_logout') }}"
-                    class="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg font-semibold">
-
-                    Logout
-
-                </a>
-
-            </div>
-
         </div>
-
+        <div class="flex items-center gap-6">
+            <div class="text-right hidden sm:block">
+                <div class="font-semibold text-slate-800">{{ session["employeeName"] }}</div>
+                <div class="text-slate-500 text-xs font-medium uppercase tracking-wider">Cashier Role</div>
+            </div>
+            <a href="{{ url_for('cashier.get_invoice') }}" class="px-5 py-2 rounded-lg font-semibold text-blue-700 bg-white hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm">
+                Back
+            </a>
+            <a href="{{ url_for('auth.user_logout') }}" class="px-5 py-2 rounded-lg font-semibold text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-colors border border-red-100 shadow-sm">
+                Logout
+            </a>
+        </div>
     </header>
 
-    <!-- ================= CONTENT ================= -->
-
-    <div class="flex flex-1 overflow-hidden">
-
-        <!-- ================= RIGHT ================= -->
-
-        <div class="flex-1 overflow-y-auto p-8">
-
-            {% if invoice %}
-
-            <div class="bg-white rounded-xl shadow p-8">
-
-                <h2 class="text-3xl font-bold mb-8">
-
-                    Payment Details
-
-                </h2>
-
-                <!-- Invoice Information -->
-
-                <div class="grid grid-cols-3 gap-6 mb-8">
-
-                    <div>
-
-                        <div class="font-semibold">
-
-                            Invoice
-
-                        </div>
-
-                        <div>
-
-                            {{ invoice.invoiceID }}
-
-                        </div>
-
-                    </div>
-
-                    <div>
-
-                        <div class="font-semibold">
-
-                            Table
-
-                        </div>
-
-                        <div>
-
-                            {{ invoice.tableNumber }}
-
-                        </div>
-
-                    </div>
-
-                    <div>
-
-                        <div class="font-semibold">
-
-                            Total Amount
-
-                        </div>
-
-                        <div class="text-red-600 font-bold text-xl">
-
-                            {{ "{:,.0f}".format(invoice.finalAmount).replace(",", ".") }} VND
-
-                        </div>
-
-                    </div>
-
+    <!-- MAIN CONTENT -->
+    <div class="flex flex-1 overflow-y-auto justify-center p-4 sm:p-8">
+        
+        {% if invoice %}
+        <div class="w-full max-w-4xl glass-panel rounded-2xl p-6 sm:p-10 flex flex-col gap-8 shadow-xl">
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 border-b border-slate-200 pb-6">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Checkout</h2>
+                    <p class="text-slate-500 font-medium mt-1">Select a payment method and confirm.</p>
                 </div>
-
-                <!-- ================= DISH ================= -->
-
-                <table class="w-full border rounded-lg overflow-hidden">
-
-                    <thead class="bg-blue-700 text-white">
-
-                        <tr>
-
-                            <th class="p-3 text-left">Dish</th>
-                            <th class="p-3">Qty</th>
-                            <th class="p-3">Price</th>
-                            <th class="p-3">Total</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {% for item in items %}
-
-                        <tr class="border-b">
-
-                            <td class="p-3">
-
-                                {{ item.name }}
-
-                            </td>
-
-                            <td class="text-center">
-
-                                {{ item.quantity }}
-
-                            </td>
-
-                            <td class="text-center">
-
-                                {{ "{:,.0f}".format(item.price).replace(",", ".") }} VND
-
-                            </td>
-
-                            <td class="text-center">
-
-                                {{ "{:,.0f}".format(item.total).replace(",", ".") }} VND
-
-                            </td>
-
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-                <!-- ================= FORM ================= -->
-
-                <form
-                    method="POST"
-                    action="{{ url_for('cashier.process_payment') }}"
-                    class="mt-8">
-
-                    <input
-                        type="hidden"
-                        name="invoiceID"
-                        value="{{ invoice.invoiceID }}">
-
-                    <h3 class="text-xl font-bold mb-5">
-
-                        Payment Method
-
-                    </h3>
-
-                    <div class="grid grid-cols-2 gap-6">
-
-                        <label>
-
-                            <input
-                                type="radio"
-                                name="paymentMethod"
-                                value="Cash"
-                                class="hidden peer"
-                                checked>
-
-                            <div class="border rounded-xl p-6 text-center cursor-pointer
-                                        peer-checked:border-blue-700
-                                        peer-checked:bg-blue-50">
-
-
-                                <div class="mt-3 font-semibold">
-
-                                    Cash
-
-                                </div>
-
-                            </div>
-
-                        </label>
-
-                        <label>
-
-                            <input
-                                type="radio"
-                                name="paymentMethod"
-                                value="Bank Transfer"
-                                class="hidden peer">
-
-                            <div class="border rounded-xl p-6 text-center cursor-pointer
-                                        peer-checked:border-blue-700
-                                        peer-checked:bg-blue-50">
-
-
-                                <div class="mt-3 font-semibold">
-
-                                    Bank Transfer
-
-                                </div>
-
-                            </div>
-
-                        </label>
-
+                
+                <div class="flex gap-4 text-right bg-white/60 p-4 rounded-xl border border-white shadow-sm w-full sm:w-auto">
+                    <div class="px-4 border-r border-slate-200">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Invoice</p>
+                        <p class="font-bold text-slate-800 text-lg">{{ invoice.invoiceID }}</p>
                     </div>
-
-                    <!-- ================= BANK ================= -->
-
-                    <div
-                        id="bankSection"
-                        class="mt-8 border rounded-xl p-6 bg-gray-50">
-
-                        <div class="grid grid-cols-2 gap-8">
-
-                            <div>
-
-                                <p class="mb-3">
-
-                                    <b>Bank:</b>
-
-                                    {{ bank_name }}
-
-                                </p>
-
-                                <p class="mb-3">
-
-                                    <b>Account Number:</b>
-
-                                    {{ account_no }}
-
-                                </p>
-
-                                <p class="mb-3">
-
-                                    <b>Account Name:</b>
-
-                                    {{ account_name }}
-
-                                </p>
-
-                                <p class="mb-3">
-
-                                    <b>Transfer Content:</b>
-
-                                    {{ invoice.invoiceID }}
-
-                                </p>
-
-                            </div>
-
-                            <div class="flex justify-center">
-
-                                <img
-                                    src="{{ qr_url }}"
-                                    class="w-64 h-64 border rounded-lg">
-
-                            </div>
-
-                        </div>
-
+                    <div class="px-4 border-r border-slate-200">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Table</p>
+                        <p class="font-bold text-blue-600 text-lg">{{ invoice.tableNumber }}</p>
                     </div>
-
-                    <div class="flex justify-end mt-8">
-
-                        <button
-                            type="submit"
-                            class="bg-blue-700 hover:bg-blue-800
-                                   text-white px-10 py-3 rounded-lg font-semibold">
-
-                            Confirm Payment
-
-                        </button>
-
+                    <div class="px-4">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total</p>
+                        <p class="font-extrabold text-red-600 text-xl">{{ "{:,.0f}".format(invoice.finalAmount) }} ₫</p>
                     </div>
-
-                </form>
-
+                </div>
             </div>
 
-            {% endif %}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- LEFT COL: Items -->
+                <div class="flex flex-col gap-4">
+                    <h3 class="text-lg font-bold text-slate-700">Order Items</h3>
+                    <div class="bg-white/80 rounded-xl border border-slate-200 shadow-sm overflow-hidden flex-1 max-h-96 overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-wider sticky top-0 backdrop-blur-md">
+                                    <th class="p-4">Item</th>
+                                    <th class="p-4 text-center">Qty</th>
+                                    <th class="p-4 text-right">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm font-medium">
+                                {% for item in items %}
+                                <tr class="border-b border-slate-100 last:border-0">
+                                    <td class="p-4">
+                                        <div class="text-slate-800 font-bold">{{ item.name }}</div>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-bold text-xs">{{ item.quantity }}</span>
+                                    </td>
+                                    <td class="p-4 text-right font-bold text-slate-800">{{ "{:,.0f}".format(item.total) }} ₫</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- RIGHT COL: Payment Form -->
+                <div>
+                    <form method="POST" action="{{ url_for('cashier.process_payment') }}" class="flex flex-col gap-6 h-full">
+                        <input type="hidden" name="invoiceID" value="{{ invoice.invoiceID }}">
+                        
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-700 mb-4">Payment Method</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="cursor-pointer relative">
+                                    <input type="radio" name="paymentMethod" value="Cash" class="peer sr-only" checked>
+                                    <div class="method-card border-2 border-slate-200 rounded-xl p-5 text-center bg-white/60">
+                                        <div class="w-12 h-12 mx-auto bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                        </div>
+                                        <div class="font-bold text-slate-800">Cash</div>
+                                    </div>
+                                    <!-- Checkmark -->
+                                    <div class="absolute top-3 right-3 text-blue-600 opacity-0 peer-checked:opacity-100 transition-opacity">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    </div>
+                                </label>
+                                
+                                <label class="cursor-pointer relative">
+                                    <input type="radio" name="paymentMethod" value="Bank Transfer" class="peer sr-only">
+                                    <div class="method-card border-2 border-slate-200 rounded-xl p-5 text-center bg-white/60">
+                                        <div class="w-12 h-12 mx-auto bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                        </div>
+                                        <div class="font-bold text-slate-800">Bank Transfer</div>
+                                    </div>
+                                    <!-- Checkmark -->
+                                    <div class="absolute top-3 right-3 text-blue-600 opacity-0 peer-checked:opacity-100 transition-opacity">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- BANK TRANSFER SECTION -->
+                        <div id="bankSection" class="hidden flex-col items-center animate-[fadeIn_0.3s_ease-in-out]">
+                            <div class="w-full bg-white/80 p-5 rounded-xl border border-blue-100 shadow-sm flex flex-col items-center">
+                                <h4 class="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                    Scan to Pay
+                                </h4>
+                                
+                                <div class="qr-container mb-4">
+                                    <img src="{{ qr_url }}" alt="VietQR" class="w-48 h-48 object-contain">
+                                </div>
+                                
+                                <div class="w-full text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-slate-500">Bank</span>
+                                        <span class="font-bold text-slate-800">{{ bank_name }}</span>
+                                    </div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-slate-500">Account No.</span>
+                                        <span class="font-bold text-slate-800">{{ account_no }}</span>
+                                    </div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-slate-500">Name</span>
+                                        <span class="font-bold text-slate-800">{{ account_name }}</span>
+                                    </div>
+                                    <div class="flex justify-between border-t border-slate-200 pt-1 mt-1">
+                                        <span class="text-slate-500">Amount</span>
+                                        <span class="font-bold text-red-600">{{ "{:,.0f}".format(invoice.finalAmount) }} ₫</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-auto pt-4 border-t border-slate-200">
+                            <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Confirm Transaction Completed
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+            </div>
 
         </div>
-
+        {% endif %}
+        
     </div>
 
-</div>
-
-<script>
-
-const radios=document.querySelectorAll("input[name='paymentMethod']");
-const bank=document.getElementById("bankSection");
-
-function updatePayment(){
-
-    const value=document.querySelector("input[name='paymentMethod']:checked").value;
-
-    if(value==="Bank Transfer"){
-
-        bank.style.display="block";
-
-    }else{
-
-        bank.style.display="none";
-
-    }
-
-}
-
-radios.forEach(r=>r.addEventListener("change",updatePayment));
-
-updatePayment();
-
-</script>
+    <script>
+        const radios = document.querySelectorAll("input[name='paymentMethod']");
+        const bank = document.getElementById("bankSection");
+        
+        function updatePayment() {
+            const value = document.querySelector("input[name='paymentMethod']:checked").value;
+            if (value === "Bank Transfer") {
+                bank.classList.remove("hidden");
+                bank.classList.add("flex");
+            } else {
+                bank.classList.add("hidden");
+                bank.classList.remove("flex");
+            }
+        }
+        
+        radios.forEach(r => r.addEventListener("change", updatePayment));
+        updatePayment(); // Initialize state
+    </script>
+    
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 
 </body>
 </html>

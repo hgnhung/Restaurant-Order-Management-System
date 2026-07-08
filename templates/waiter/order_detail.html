@@ -4,49 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details - Table {{ table_number }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS Reset and Viewport Fixes */
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 40px 20px; 
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+        }
         
-        /* Main Container Card */
-        .container { width: 100%; max-width: 500px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+        .container { 
+            width: 100%; 
+            max-width: 550px; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.6);
+            border-radius: 24px; 
+            padding: 30px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+        }
         
-        /* Metadata Header Section */
-        .header-section { border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px; }
-        .header-section h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 22px; }
-        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; color: #4a5568; }
+        .header-section { 
+            border-bottom: 2px solid #f1f5f9; 
+            padding-bottom: 20px; 
+            margin-bottom: 20px; 
+        }
         
-        /* Dynamic Status Badge */
-        .badge-status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
-        .status-confirmed { background-color: #ebf5fb; color: #2980b9; }
-        .status-preparing { background-color: #f4ecf7; color: #8e44ad; }
-        .status-ready { background-color: #eafaf1; color: #27ae60; }
-        .status-served { background-color: #f2f4f4; color: #7f8c8d; }
+        .header-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
         
-        /* Ordered Items List */
-        .item-list { list-style: none; padding: 0; margin: 20px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
-        .dish-row { padding: 12px 0; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .dish-name { font-weight: 600; color: #2c3e50; }
-        .dish-note { color: #7f8c8d; font-size: 13px; margin-top: 3px; font-style: italic; }
-        .dish-qty { font-weight: bold; color: #34495e; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 14px; }
+        .header-section h3 { margin: 0; color: #0f172a; font-size: 24px; font-weight: 700; }
         
-        /* Touch-Friendly Action Buttons */
-        .action-block { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-        .btn-action { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background 0.2s; text-align: center; text-decoration: none; }
-        .btn-serve { background-color: #27ae60; color: white; }
-        .btn-serve:hover { background-color: #219653; }
+        .meta-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            font-size: 14px; 
+            color: #475569; 
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+        }
         
-        .row-buttons { display: flex; gap: 12px; }
-        .btn-modify { background-color: #3498db; color: white; flex: 1; }
-        .btn-modify:hover { background-color: #2980b9; }
-        .btn-cancel { background-color: #e74c3c; color: white; flex: 1; }
-        .btn-cancel:hover { background-color: #c0392b; }
+        .badge-status { 
+            display: inline-flex; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: 700; 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
         
-        .btn-back-dashboard { background-color: #95a5a6; color: white; }
-        .btn-back-dashboard:hover { background-color: #7f8c8d; }
+        .status-confirmed { background-color: #eff6ff; color: #2563eb; }
+        .status-preparing { background-color: #fdf4ff; color: #c026d3; }
+        .status-ready { background-color: #ecfdf5; color: #10b981; }
+        .status-served { background-color: #f1f5f9; color: #64748b; }
+        .status-draft { background-color: #fff7ed; color: #ea580c; }
         
-        .btn-action:disabled, .btn-action.disabled-style { background-color: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; pointer-events: none; }
+        .section-title { margin: 0 0 15px 0; color: #334155; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .item-list { list-style: none; padding: 0; margin: 0 0 25px 0; border: 1px solid #f1f5f9; border-radius: 12px; overflow: hidden; }
+        .dish-row { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: white; }
+        .dish-row:last-child { border-bottom: none; }
+        
+        .dish-name { font-weight: 600; color: #0f172a; font-size: 15px; }
+        .dish-note { color: #64748b; font-size: 13px; margin-top: 4px; display: inline-block; background: #f8fafc; padding: 4px 8px; border-radius: 6px; }
+        .dish-qty { font-weight: 700; color: #3b82f6; background: #eff6ff; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 15px; }
+        
+        .action-block { display: flex; flex-direction: column; gap: 15px; }
+        .btn-action { 
+            width: 100%; padding: 16px; border: none; border-radius: 14px; 
+            font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; 
+            text-align: center; text-decoration: none; 
+        }
+        
+        .btn-serve { background-color: #10b981; color: white; box-shadow: 0 4px 10px rgba(16,185,129,0.2); }
+        .btn-serve:hover { background-color: #059669; transform: translateY(-2px); }
+        
+        .row-buttons { display: flex; gap: 15px; }
+        
+        .btn-modify { background-color: #3b82f6; color: white; flex: 1; box-shadow: 0 4px 10px rgba(59,130,246,0.2); }
+        .btn-modify:hover { background-color: #2563eb; transform: translateY(-2px); }
+        
+        .btn-cancel { background-color: white; color: #ef4444; border: 2px solid #fee2e2; flex: 1; }
+        .btn-cancel:hover { background-color: #fef2f2; border-color: #fca5a5; transform: translateY(-2px); }
+        
+        .btn-back-dashboard { background-color: #f1f5f9; color: #475569; margin-top: 5px; }
+        .btn-back-dashboard:hover { background-color: #e2e8f0; color: #0f172a; }
+        
+        .btn-action:disabled, .btn-action.disabled-style { 
+            background-color: #f1f5f9 !important; color: #94a3b8 !important; border: none !important;
+            cursor: not-allowed; box-shadow: none !important; transform: none !important;
+        }
     </style>
 </head>
 <body>
@@ -54,39 +113,42 @@
 <div class="container">
     {% if order %}
         <div class="header-section">
-            <h3>Order Details — Table {{ table_number }}</h3>
+            <div class="header-title-row">
+                <h3>Table {{ table_number }}</h3>
+                <span class="badge-status 
+                    {% if order.Status == 'Confirmed' %}status-confirmed
+                    {% elif order.Status == 'Preparing' %}status-preparing
+                    {% elif order.Status == 'Ready' %}status-ready
+                    {% elif order.Status == 'Draft' %}status-draft
+                    {% else %}status-served{% endif %}">
+                    {{ order.Status }}
+                </span>
+            </div>
+            
             <div class="meta-grid">
-                <div><strong>Order ID:</strong> {{ order.OrderID }}</div>
-                <div><strong>Date:</strong> {{ order.OrderDate }}</div>
-                <div style="grid-column: span 2; margin-top: 5px;">
-                    <strong>Status:</strong> 
-                    <span class="badge-status 
-                        {% if order.Status == 'Confirmed' %}status-confirmed
-                        {% elif order.Status == 'Preparing' %}status-preparing
-                        {% elif order.Status == 'Ready' %}status-ready
-                        {% else %}status-served{% endif %}">
-                        {{ order.Status }}
-                    </span>
-                </div>
+                <div><strong>ID:</strong> {{ order.OrderID }}</div>
+                <div><strong>Time:</strong> {{ order.OrderDate }}</div>
             </div>
         </div>
 
-        <h5 style="margin: 0; color: #34495e; font-size: 16px;">Ordered Items</h5>
+        <h5 class="section-title">Order Items</h5>
         <ul class="item-list">
             {% if items %}
                 {% for item in items %}
                 <li class="dish-row">
                     <div>
-                        <span class="dish-name">{{ item.name }}</span>
+                        <div class="dish-name">{{ item.name }}</div>
                         {% if item.specialNote %}
-                            <div class="dish-note">📝 Ghi chú: {{ item.specialNote }}</div>
+                            <div class="dish-note">📝 {{ item.specialNote }}</div>
                         {% endif %}
                     </div>
-                    <span class="dish-qty">x{{ item.quantity }}</span>
+                    <div class="dish-qty">x{{ item.quantity }}</div>
                 </li>
                 {% endfor %}
             {% else %}
-                <p style="color: #95a5a6; text-align: center; padding: 20px 0; margin: 0;">No items found in this order.</p>
+                <div style="padding: 30px; text-align: center; color: #94a3b8;">
+                    No items found in this order.
+                </div>
             {% endif %}
         </ul>
 
@@ -100,25 +162,28 @@
             {% endif %}
 
             <div class="row-buttons">
-                
                 <a href="/waiter/order?table={{ table_number }}" 
                    class="btn-action btn-modify {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled-style{% endif %}">
-                   ✏ Modify Order
+                   ✏ Modify
                 </a>
                 <form action="/waiter/cancel-order" method="POST" style="flex: 1; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
                     <input type="hidden" name="order_id" value="{{ order.OrderID }}">
                     <button type="submit" class="btn-action btn-cancel" 
                             {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled{% endif %}>
-                            ❌ Cancel Order
+                            ❌ Cancel
                     </button>
                 </form>
             </div>
         </div>
     {% else %}
-        <p style="text-align: center; color: #95a5a6; padding: 40px 0;">No active order found for this table.</p>
+        <div style="text-align: center; padding: 40px 0;">
+            <div style="font-size: 48px; margin-bottom: 20px;">📭</div>
+            <h3 style="color: #0f172a; margin: 0 0 10px 0;">No Active Order</h3>
+            <p style="color: #64748b; margin: 0;">This table is currently available.</p>
+        </div>
     {% endif %}
     
-    <a href="/waiter/tables" class="btn-action btn-back-dashboard" style="margin-top: 12px;">Back to Table Map</a>
+    <a href="/waiter/tables" class="btn-action btn-back-dashboard">⬅ Back to Map</a>
 </div>
 
 </body>
