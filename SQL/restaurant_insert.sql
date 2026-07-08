@@ -130,3 +130,16 @@ VALUES
 ('RPT001','2026-07-01 00:00:00','2026-07-01 23:59:59',1243000);
 GO
 
+SELECT orderID, tableNumber, status, orderDate
+FROM Orders
+ORDER BY orderDate;
+
+SELECT *
+FROM Invoice;
+
+SELECT *
+FROM Payment;
+
+DELETE FROM Payment;
+
+DELETE FROM Invoice;

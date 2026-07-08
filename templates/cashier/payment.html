@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Processing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+
+<div class="h-screen flex flex-col">
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="bg-blue-700 text-white px-8 py-5 shadow">
+
+        <div class="flex justify-between items-center">
+
+            <div>
+                <h1 class="text-3xl font-bold">
+                    Payment Processing
+                </h1>
+
+                <p class="text-blue-100">
+                    Cashier Terminal
+                </p>
+            </div>
+
+            <div class="flex items-center gap-4">
+
+                <div class="text-right">
+
+                    <div class="font-semibold">
+                        {{ session["employeeName"] }}
+                    </div>
+
+                    <div class="text-blue-200 text-sm">
+                        Cashier
+                    </div>
+
+                </div>
+
+                <a
+                    href="{{ url_for('cashier.get_invoice') }}"
+                    class="bg-white text-blue-700 px-5 py-2 rounded-lg font-semibold hover:bg-gray-100">
+
+                    Back
+
+                </a>
+
+                <a
+                    href="{{ url_for('auth.user_logout') }}"
+                    class="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg font-semibold">
+
+                    Logout
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+    <!-- ================= CONTENT ================= -->
+
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- ================= RIGHT ================= -->
+
+        <div class="flex-1 overflow-y-auto p-8">
+
+            {% if invoice %}
+
+            <div class="bg-white rounded-xl shadow p-8">
+
+                <h2 class="text-3xl font-bold mb-8">
+
+                    Payment Details
+
+                </h2>
+
+                <!-- Invoice Information -->
+
+                <div class="grid grid-cols-3 gap-6 mb-8">
+
+                    <div>
+
+                        <div class="font-semibold">
+
+                            Invoice
+
+                        </div>
+
+                        <div>
+
+                            {{ invoice.invoiceID }}
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <div class="font-semibold">
+
+                            Table
+
+                        </div>
+
+                        <div>
+
+                            {{ invoice.tableNumber }}
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <div class="font-semibold">
+
+                            Total Amount
+
+                        </div>
+
+                        <div class="text-red-600 font-bold text-xl">
+
+                            {{ "{:,.0f}".format(invoice.finalAmount).replace(",", ".") }} VND
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ================= DISH ================= -->
+
+                <table class="w-full border rounded-lg overflow-hidden">
+
+                    <thead class="bg-blue-700 text-white">
+
+                        <tr>
+
+                            <th class="p-3 text-left">Dish</th>
+                            <th class="p-3">Qty</th>
+                            <th class="p-3">Price</th>
+                            <th class="p-3">Total</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in items %}
+
+                        <tr class="border-b">
+
+                            <td class="p-3">
+
+                                {{ item.name }}
+
+                            </td>
+
+                            <td class="text-center">
+
+                                {{ item.quantity }}
+
+                            </td>
+
+                            <td class="text-center">
+
+                                {{ "{:,.0f}".format(item.price).replace(",", ".") }} VND
+
+                            </td>
+
+                            <td class="text-center">
+
+                                {{ "{:,.0f}".format(item.total).replace(",", ".") }} VND
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+                <!-- ================= FORM ================= -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for('cashier.process_payment') }}"
+                    class="mt-8">
+
+                    <input
+                        type="hidden"
+                        name="invoiceID"
+                        value="{{ invoice.invoiceID }}">
+
+                    <h3 class="text-xl font-bold mb-5">
+
+                        Payment Method
+
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-6">
+
+                        <label>
+
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="Cash"
+                                class="hidden peer"
+                                checked>
+
+                            <div class="border rounded-xl p-6 text-center cursor-pointer
+                                        peer-checked:border-blue-700
+                                        peer-checked:bg-blue-50">
+
+
+                                <div class="mt-3 font-semibold">
+
+                                    Cash
+
+                                </div>
+
+                            </div>
+
+                        </label>
+
+                        <label>
+
+                            <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="Bank Transfer"
+                                class="hidden peer">
+
+                            <div class="border rounded-xl p-6 text-center cursor-pointer
+                                        peer-checked:border-blue-700
+                                        peer-checked:bg-blue-50">
+
+
+                                <div class="mt-3 font-semibold">
+
+                                    Bank Transfer
+
+                                </div>
+
+                            </div>
+
+                        </label>
+
+                    </div>
+
+                    <!-- ================= BANK ================= -->
+
+                    <div
+                        id="bankSection"
+                        class="mt-8 border rounded-xl p-6 bg-gray-50">
+
+                        <div class="grid grid-cols-2 gap-8">
+
+                            <div>
+
+                                <p class="mb-3">
+
+                                    <b>Bank:</b>
+
+                                    {{ bank_name }}
+
+                                </p>
+
+                                <p class="mb-3">
+
+                                    <b>Account Number:</b>
+
+                                    {{ account_no }}
+
+                                </p>
+
+                                <p class="mb-3">
+
+                                    <b>Account Name:</b>
+
+                                    {{ account_name }}
+
+                                </p>
+
+                                <p class="mb-3">
+
+                                    <b>Transfer Content:</b>
+
+                                    {{ invoice.invoiceID }}
+
+                                </p>
+
+                            </div>
+
+                            <div class="flex justify-center">
+
+                                <img
+                                    src="{{ qr_url }}"
+                                    class="w-64 h-64 border rounded-lg">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex justify-end mt-8">
+
+                        <button
+                            type="submit"
+                            class="bg-blue-700 hover:bg-blue-800
+                                   text-white px-10 py-3 rounded-lg font-semibold">
+
+                            Confirm Payment
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const radios=document.querySelectorAll("input[name='paymentMethod']");
+const bank=document.getElementById("bankSection");
+
+function updatePayment(){
+
+    const value=document.querySelector("input[name='paymentMethod']:checked").value;
+
+    if(value==="Bank Transfer"){
+
+        bank.style.display="block";
+
+    }else{
+
+        bank.style.display="none";
+
+    }
+
+}
+
+radios.forEach(r=>r.addEventListener("change",updatePayment));
+
+updatePayment();
+
+</script>
+
+</body>
+</html>

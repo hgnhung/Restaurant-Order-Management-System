@@ -155,7 +155,7 @@ async function login(){
 
         else if(result.position === "Cashier"){
 
-            window.location.href = "/cashier/dashboard";
+            window.location.href = "/cashier/invoice";
 
         }
 
