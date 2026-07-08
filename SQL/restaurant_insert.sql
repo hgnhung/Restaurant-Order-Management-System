@@ -20,9 +20,16 @@ INSERT INTO RestaurantTable(tableNumber,status)
 VALUES
 (1,'Available'),
 (2,'Occupied'),
-(3,'Available'),
-(4,'Available'),
-(5,'Occupied')
+(3,'Occupied'),
+(4,'Occupied'),
+(5,'Occupied'),
+(6,'Available'),
+(7,'Occupied'),
+(8,'Available'),
+(9,'Occupied'),
+(10,'Occupied'),
+(11,'Occupied'),
+(12,'Available');
 GO
 
 -- ==========================
@@ -58,18 +65,22 @@ GO
 -- ==========================
 INSERT INTO Orders(orderID, tableNumber, status, orderDate)
 VALUES
-('ORD001',2,'Preparing','2026-07-01 11:30:00'),
-('ORD002',5,'Ready','2026-07-01 11:40:00'),
-('ORD003',3,'Ready','2026-07-01 11:15:00'),
-('ORD004',1,'Completed','2026-07-01 10:45:00'),
-('ORD005',4,'Preparing','2026-07-01 12:00:00');
+('ORD001',2,'Preparing','2026-07-08 10:00:00'),
+('ORD002',3,'Pending','2026-07-08 10:05:00'),
+('ORD003',4,'Ready','2026-07-08 10:10:00'),
+('ORD004',5,'Preparing','2026-07-08 10:15:00'),
+('ORD005',7,'Pending','2026-07-08 10:20:00'),
+('ORD006',9,'Ready','2026-07-08 10:25:00'),
+('ORD007',10,'Preparing','2026-07-08 10:30:00'),
+('ORD008',11,'Ready','2026-07-08 10:35:00'),
+('ORD009',1,'Completed','2026-07-08 09:30:00'),
+('ORD010',6,'Completed','2026-07-08 09:45:00');
 GO
 
 -- ==========================
 -- Order Detail
 -- ==========================
-INSERT INTO OrderDetail
-(orderID,dishID,quantity,specialNote)
+INSERT INTO OrderDetail(orderID,dishID,quantity,specialNote)
 VALUES
 
 ('ORD001','DISH03',2,'Less salt'),
@@ -85,23 +96,39 @@ VALUES
 ('ORD004','DISH08',2,NULL),
 
 ('ORD005','DISH02',3,'Extra sauce'),
-('ORD005','DISH07',2,NULL);
+('ORD005','DISH07',2,NULL),
+
+('ORD006','DISH04',2,NULL),
+('ORD006','DISH10',2,NULL),
+
+('ORD007','DISH03',3,'No egg'),
+('ORD007','DISH09',3,NULL),
+
+('ORD008','DISH01',2,NULL),
+('ORD008','DISH06',1,'Extra cheese'),
+
+('ORD009','DISH05',1,NULL),
+('ORD009','DISH09',2,NULL),
+
+('ORD010','DISH04',1,'Well done'),
+('ORD010','DISH08',2,NULL);
 GO
 
 -- ==========================
 -- Invoice
 -- ==========================
-INSERT INTO Invoice
-(invoiceID,orderID,tax,finalAmount,createdAt)
+INSERT INTO Invoice(invoiceID,orderID,tax,finalAmount,createdAt)
 VALUES
 
-('INV001','ORD001',15500,170500,'2026-07-01 11:50:00'),
+('INV001','ORD003',19600,264600,'2026-07-08 10:40:00'),
 
-('INV002','ORD002',35000,385000,'2026-07-01 12:05:00'),
+('INV002','ORD006',48000,648000,'2026-07-08 10:45:00'),
 
-('INV003','ORD003',22000,242000,'2026-07-01 11:35:00'),
+('INV003','ORD008',17200,232200,'2026-07-08 10:50:00'),
 
-('INV004','ORD004',40500,445500,'2026-07-01 11:10:00');
+('INV004','ORD009',18400,248400,'2026-07-08 09:40:00'),
+
+('INV005','ORD010',27200,367200,'2026-07-08 09:55:00');
 GO
 
 -- ==========================
@@ -111,13 +138,9 @@ INSERT INTO Payment
 (paymentID,invoiceID,paymentMethod,amount,paymentTime,cashierID)
 VALUES
 
-('PAY001','INV001','Cash',170500,'2026-07-01 11:55:00','E06'),
+('PAY001','INV004','Cash',248400,'2026-07-08 09:45:00','E06'),
 
-('PAY002','INV002','Cash',385000,'2026-07-01 12:10:00','E06'),
-
-('PAY003','INV003','QR Code',242000,'2026-07-01 11:40:00','E06'),
-
-('PAY004','INV004','Cash',445500,'2026-07-01 11:15:00','E06');
+('PAY002','INV005','Bank Transfer',367200,'2026-07-08 10:00:00','E06');
 GO
 
 -- ==========================
@@ -126,20 +149,20 @@ GO
 INSERT INTO RevenueReport
 (reportID,fromDate,toDate,totalRevenue)
 VALUES
-
-('RPT001','2026-07-01 00:00:00','2026-07-01 23:59:59',1243000);
+('RPT001',
+'2026-07-08 00:00:00',
+'2026-07-08 23:59:59',
+615600);
 GO
 
-SELECT orderID, tableNumber, status, orderDate
-FROM Orders
-ORDER BY orderDate;
-
-SELECT *
-FROM Invoice;
-
-SELECT *
-FROM Payment;
-
 DELETE FROM Payment;
-
 DELETE FROM Invoice;
+DELETE FROM OrderDetail;
+DELETE FROM Orders;
+DELETE FROM RevenueReport;
+DELETE FROM Dish;
+DELETE FROM Category;
+DELETE FROM RestaurantTable;
+DELETE FROM Employee;
+
+SELECT * FROM Employee;

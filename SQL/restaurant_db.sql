@@ -179,6 +179,7 @@ CREATE TABLE RevenueReport
     totalRevenue DECIMAL(18,2)
 );
 
+
 USE RestaurantManagement;
 GO
 
@@ -194,3 +195,4 @@ DROP TABLE IF EXISTS RestaurantTable;
 DROP TABLE IF EXISTS RevenueReport;
 DROP TABLE IF EXISTS Employee;
 GO
+
