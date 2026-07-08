@@ -69,7 +69,7 @@ class OrderModel:
             cursor.execute("""
                 SELECT TOP 1 orderID, status, orderDate 
                 FROM Orders 
-                WHERE tableNumber = ? AND status IN ('Draft', 'Confirmed', 'Preparing', 'Ready', 'Served')
+                WHERE tableNumber = ? AND status NOT IN ('Completed', 'Cancelled')
                 ORDER BY orderDate DESC
             """, (table_number,))
             row = cursor.fetchone()
@@ -330,7 +330,6 @@ class OrderModel:
                 return False
             
             cursor.execute("UPDATE Orders SET status = 'Served' WHERE orderID = ?", (order_id,))
-            cursor.execute("UPDATE RestaurantTable SET status = 'Available' WHERE tableNumber = ?", (row[1],))
             conn.commit()
             return True
         except Exception as e:

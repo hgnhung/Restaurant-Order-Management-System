@@ -1,386 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Take Order - Table {{ table_number }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            background-color: #f8fafc;
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            background-color: #f8fafc; 
             color: #334155;
         }
-
+        
         /* Layout */
-        .menu-pane {
-            width: 65%;
-            padding: 30px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .order-pane {
-            width: 35%;
-            background: white;
-            border-left: 1px solid #e2e8f0;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.02);
-        }
-
+        .menu-pane { width: 65%; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; }
+        .order-pane { width: 35%; background: white; border-left: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.02); }
+        
         /* Header Elements */
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .btn-back {
-            background: white;
-            color: #64748b;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s;
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-back:hover {
-            background: #f1f5f9;
-            color: #0f172a;
-        }
-
-        h3 {
-            margin: 0;
-            font-size: 24px;
-            color: #0f172a;
-            font-weight: 700;
-        }
-
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .btn-back { background: white; color: #64748b; padding: 10px 20px; text-decoration: none; border-radius: 12px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; border: 1px solid #e2e8f0; }
+        .btn-back:hover { background: #f1f5f9; color: #0f172a; }
+        h3 { margin: 0; font-size: 24px; color: #0f172a; font-weight: 700; }
+        
         /* Search & Tabs */
-        .input-search {
-            width: 100%;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 16px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-        }
-
-        .input-search:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .category-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            overflow-x: auto;
-            padding-bottom: 8px;
-        }
-
-        .btn-tab {
-            background: white;
-            border: 1px solid #e2e8f0;
-            color: #64748b;
-            padding: 10px 20px;
-            border-radius: 100px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 15px;
-            white-space: nowrap;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-        }
-
-        .btn-tab:hover {
-            border-color: #cbd5e1;
-            color: #334155;
-        }
-
-        .btn-tab.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
-        }
-
+        .input-search { width: 100%; padding: 16px 20px; margin-bottom: 20px; border: 1px solid #e2e8f0; border-radius: 16px; font-size: 16px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .input-search:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        .category-tabs { display: flex; gap: 12px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px; }
+        .btn-tab { background: white; border: 1px solid #e2e8f0; color: #64748b; padding: 10px 20px; border-radius: 100px; cursor: pointer; font-weight: 600; font-size: 15px; white-space: nowrap; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .btn-tab:hover { border-color: #cbd5e1; color: #334155; }
+        .btn-tab.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2); }
+        
         /* Menu Grid */
-        .dish-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
+        .dish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        .dish-card { 
+            background: white; border-radius: 20px; padding: 20px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            border: 1px solid #f1f5f9; transition: all 0.3s;
         }
-
-        .dish-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            border: 1px solid #f1f5f9;
-            transition: all 0.3s;
-        }
-
-        .dish-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-color: #e2e8f0;
-        }
-
-        .dish-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
-        }
-
-        .dish-card h4 {
-            margin: 0;
-            color: #0f172a;
-            font-size: 18px;
-            font-weight: 700;
-            width: 70%;
-        }
-
-        .dish-price {
-            color: #10b981;
-            font-weight: 700;
-            font-size: 16px;
-            margin: 0;
-            background: #ecfdf5;
-            padding: 4px 8px;
-            border-radius: 8px;
-        }
-
-        .dish-desc {
-            font-size: 14px;
-            color: #64748b;
-            margin: 0 0 8px 0;
-            line-height: 1.5;
-        }
-
-        .dish-ingr {
-            font-size: 12px;
-            color: #94a3b8;
-            margin: 0 0 16px 0;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .input-qty {
-            width: 60px;
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            font-weight: 600;
-        }
-
-        .input-note {
-            flex-grow: 1;
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .btn-add {
-            background: #f8fafc;
-            color: #3b82f6;
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 15px;
-            width: 100%;
-            transition: all 0.2s;
-        }
-
-        .btn-add:hover {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-        }
-
+        .dish-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #e2e8f0; }
+        
+        .dish-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .dish-card h4 { margin: 0; color: #0f172a; font-size: 18px; font-weight: 700; width: 70%; }
+        .dish-price { color: #10b981; font-weight: 700; font-size: 16px; margin: 0; background: #ecfdf5; padding: 4px 8px; border-radius: 8px; }
+        
+        .dish-desc { font-size: 14px; color: #64748b; margin: 0 0 8px 0; line-height: 1.5; }
+        .dish-ingr { font-size: 12px; color: #94a3b8; margin: 0 0 16px 0; }
+        
+        .form-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .input-qty { width: 60px; padding: 10px; text-align: center; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; }
+        .input-note { flex-grow: 1; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; }
+        .btn-add { background: #f8fafc; color: #3b82f6; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 15px; width: 100%; transition: all 0.2s; }
+        .btn-add:hover { background: #eff6ff; border-color: #bfdbfe; }
+        
         /* Order Pane */
-        .order-pane-header {
-            margin: 0 0 20px 0;
-            font-size: 20px;
-            color: #0f172a;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cart-badge {
-            background: #ef4444;
-            color: white;
-            font-size: 13px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        .order-list {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .order-item {
-            padding: 16px 0;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .item-info {
-            flex-grow: 1;
-            padding-right: 15px;
-        }
-
-        .item-name {
-            font-weight: 600;
-            color: #0f172a;
-            font-size: 15px;
-            margin-bottom: 4px;
-        }
-
-        .item-note {
-            color: #64748b;
-            font-size: 13px;
-            background: #f8fafc;
-            padding: 4px 8px;
-            border-radius: 6px;
-            display: inline-block;
-        }
-
-        .item-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .qty-controls {
-            display: flex;
-            align-items: center;
-            background: #f1f5f9;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .btn-qty-adj {
-            background: none;
-            border: none;
-            padding: 6px 12px;
-            font-weight: bold;
-            cursor: pointer;
-            color: #3b82f6;
-            transition: background 0.2s;
-        }
-
-        .btn-qty-adj:hover {
-            background: #e2e8f0;
-        }
-
-        .item-qty {
-            font-weight: 700;
-            color: #0f172a;
-            width: 28px;
-            text-align: center;
-        }
-
-        .btn-remove {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 20px;
-            padding: 4px;
-            transition: color 0.2s;
-            margin-left: 5px;
-        }
-
-        .btn-remove:hover {
-            color: #ef4444;
-        }
-
-        .empty-cart {
-            text-align: center;
-            color: #94a3b8;
-            margin-top: 60px;
-            font-weight: 500;
-        }
-
-        .btn-confirm {
-            background: #10b981;
-            color: white;
-            width: 100%;
-            padding: 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            font-weight: 700;
-            margin-top: 20px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-        }
-
-        .btn-confirm:hover {
-            background: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-confirm:disabled {
-            background: #cbd5e1;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .order-pane-header { margin: 0 0 20px 0; font-size: 20px; color: #0f172a; display: flex; justify-content: space-between; align-items: center; }
+        .cart-badge { background: #ef4444; color: white; font-size: 13px; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+        
+        .order-list { flex-grow: 1; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+        .order-item { padding: 16px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .order-item:last-child { border-bottom: none; }
+        
+        .item-info { flex-grow: 1; padding-right: 15px; }
+        .item-name { font-weight: 600; color: #0f172a; font-size: 15px; margin-bottom: 4px; }
+        .item-note { color: #64748b; font-size: 13px; background: #f8fafc; padding: 4px 8px; border-radius: 6px; display: inline-block; }
+        
+        .item-actions { display: flex; align-items: center; gap: 10px; }
+        .qty-controls { display: flex; align-items: center; background: #f1f5f9; border-radius: 8px; overflow: hidden; }
+        .btn-qty-adj { background: none; border: none; padding: 6px 12px; font-weight: bold; cursor: pointer; color: #3b82f6; transition: background 0.2s; }
+        .btn-qty-adj:hover { background: #e2e8f0; }
+        .item-qty { font-weight: 700; color: #0f172a; width: 28px; text-align: center; }
+        
+        .btn-remove { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 20px; padding: 4px; transition: color 0.2s; margin-left: 5px; }
+        .btn-remove:hover { color: #ef4444; }
+        
+        .empty-cart { text-align: center; color: #94a3b8; margin-top: 60px; font-weight: 500; }
+        
+        .btn-confirm { background: #10b981; color: white; width: 100%; padding: 20px; font-size: 16px; border: none; border-radius: 16px; cursor: pointer; font-weight: 700; margin-top: 20px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-confirm:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3); }
+        .btn-confirm:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
     </style>
 </head>
-
 <body>
     <div class="menu-pane">
         <div class="header-actions">
             <a href="/waiter/tables" class="btn-back">⬅ Tables</a>
             <h3>Table {{ table_number }}</h3>
         </div>
-
+        
         <input type="text" id="searchBox" class="input-search" placeholder="🔍 Search menu..." onkeyup="runFilter()">
 
         <div class="category-tabs">
@@ -393,8 +105,7 @@
 
         <div class="dish-grid">
             {% for dish in dishes %}
-            <div class="dish-card dish-item-wrapper" data-category="{{ dish.Category }}"
-                data-name="{{ dish.Name | lower }}">
+            <div class="dish-card dish-item-wrapper" data-category="{{ dish.Category }}" data-name="{{ dish.Name | lower }}">
                 <div>
                     <div class="dish-header">
                         <h4>{{ dish.Name }}</h4>
@@ -403,7 +114,7 @@
                     {% if dish.Description %}<p class="dish-desc">{{ dish.Description }}</p>{% endif %}
                     {% if dish.Ingredients %}<p class="dish-ingr">{{ dish.Ingredients }}</p>{% endif %}
                 </div>
-
+                
                 <form action="/waiter/add-to-cart" method="POST" style="margin-top: 15px;">
                     <input type="hidden" name="table_number" value="{{ table_number }}">
                     <input type="hidden" name="dish_id" value="{{ dish.DishID }}">
@@ -423,50 +134,50 @@
             Current Order
             {% if cart_items %}<span class="cart-badge">{{ cart_items|length }}</span>{% endif %}
         </h3>
-
+        
         <ul class="order-list">
             {% if cart_items %}
-            {% for item in cart_items %}
-            <li class="order-item">
-                <div class="item-info">
-                    <div class="item-name">{{ item.name }}</div>
-                    {% if item.note %}<div class="item-note">📝 {{ item.note }}</div>{% endif %}
-                </div>
-                <div class="item-actions">
-                    <div class="qty-controls">
-                        <form action="/waiter/update-cart" method="POST" style="margin: 0;">
+                {% for item in cart_items %}
+                <li class="order-item">
+                    <div class="item-info">
+                        <div class="item-name">{{ item.name }}</div>
+                        {% if item.note %}<div class="item-note">📝 {{ item.note }}</div>{% endif %}
+                    </div>
+                    <div class="item-actions">
+                        <div class="qty-controls">
+                            <form action="/waiter/update-cart" method="POST" style="margin: 0;">
+                                <input type="hidden" name="table_number" value="{{ table_number }}">
+                                <input type="hidden" name="dish_id" value="{{ item.dish_id }}">
+                                <input type="hidden" name="special_note" value="{{ item.note }}">
+                                <input type="hidden" name="action" value="decrease">
+                                <button type="submit" class="btn-qty-adj">−</button>
+                            </form>
+                            <div class="item-qty">{{ item.quantity }}</div>
+                            <form action="/waiter/update-cart" method="POST" style="margin: 0;">
+                                <input type="hidden" name="table_number" value="{{ table_number }}">
+                                <input type="hidden" name="dish_id" value="{{ item.dish_id }}">
+                                <input type="hidden" name="special_note" value="{{ item.note }}">
+                                <input type="hidden" name="action" value="increase">
+                                <button type="submit" class="btn-qty-adj">+</button>
+                            </form>
+                        </div>
+                        <form action="/waiter/remove-from-cart" method="POST" style="margin: 0;">
                             <input type="hidden" name="table_number" value="{{ table_number }}">
                             <input type="hidden" name="dish_id" value="{{ item.dish_id }}">
                             <input type="hidden" name="special_note" value="{{ item.note }}">
-                            <input type="hidden" name="action" value="decrease">
-                            <button type="submit" class="btn-qty-adj">−</button>
-                        </form>
-                        <div class="item-qty">{{ item.quantity }}</div>
-                        <form action="/waiter/update-cart" method="POST" style="margin: 0;">
-                            <input type="hidden" name="table_number" value="{{ table_number }}">
-                            <input type="hidden" name="dish_id" value="{{ item.dish_id }}">
-                            <input type="hidden" name="special_note" value="{{ item.note }}">
-                            <input type="hidden" name="action" value="increase">
-                            <button type="submit" class="btn-qty-adj">+</button>
+                            <button type="submit" class="btn-remove">×</button>
                         </form>
                     </div>
-                    <form action="/waiter/remove-from-cart" method="POST" style="margin: 0;">
-                        <input type="hidden" name="table_number" value="{{ table_number }}">
-                        <input type="hidden" name="dish_id" value="{{ item.dish_id }}">
-                        <input type="hidden" name="special_note" value="{{ item.note }}">
-                        <button type="submit" class="btn-remove">×</button>
-                    </form>
-                </div>
-            </li>
-            {% endfor %}
+                </li>
+                {% endfor %}
             {% else %}
-            <div class="empty-cart">
-                <div style="font-size: 40px; margin-bottom: 10px;">🍽️</div>
-                No items selected yet.
-            </div>
+                <div class="empty-cart">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🍽️</div>
+                    No items selected yet.
+                </div>
             {% endif %}
         </ul>
-
+        
         <form action="/waiter/confirm-order" method="POST">
             <input type="hidden" name="table_number" value="{{ table_number }}">
             <button type="submit" class="btn-confirm" {% if not cart_items %}disabled{% endif %}>
@@ -495,5 +206,4 @@
         }
     </script>
 </body>
-
 </html>
