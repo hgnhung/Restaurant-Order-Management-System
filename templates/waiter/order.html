@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Placement - Table {{ table_number }}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; display: flex; min-height: 100vh; background-color: #f8f9fa; }
+        .menu-pane { width: 60%; padding: 25px; overflow-y: auto; height: 100vh; }
+        .order-pane { width: 40%; background: white; border-left: 2px solid #e0e0e0; padding: 25px; display: flex; flex-direction: column; height: 100vh; }
+        .dish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 15px; }
+        .dish-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .dish-card h4 { margin: 0 0 8px 0; color: #2c3e50; font-size: 18px; }
+        .dish-price { color: #e74c3c; font-weight: bold; font-size: 16px; margin: 0 0 12px 0; }
+        .input-qty { width: 50px; padding: 6px; text-align: center; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; }
+        .input-note { width: 100%; padding: 8px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        .btn-add { background-color: #3498db; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; width: 100%; transition: background 0.2s; }
+        .btn-add:hover { background-color: #2980b9; }
+        .order-list { flex-grow: 1; overflow-y: auto; margin-top: 15px; list-style: none; padding: 0; }
+        .order-item { padding: 12px 0; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .btn-confirm { background-color: #27ae60; color: white; width: 100%; padding: 16px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: background 0.2s; }
+        .btn-back { background-color: #7f8c8d; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; display: inline-block; margin-bottom: 15px; font-weight: 500; font-size: 15px; }
+        .input-search { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; }
+        .category-tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .btn-tab { background: none; border: 1px solid #3498db; color: #3498db; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; white-space: nowrap; }
+        .btn-tab.active { background-color: #3498db; color: white; }
+        .dish-desc { font-size: 13px; color: #7f8c8d; margin: 0 0 6px 0; text-align: left; }
+        .dish-ingr { font-size: 11px; color: #94a3b8; margin: 0 0 10px 0; font-style: italic; text-align: left; }
+        .badge-status { position: absolute; top: 10px; right: 10px; font-size: 11px; padding: 3px 8px; border-radius: 20px; font-weight: bold; color: #2ecc71; background: #eafaf1; }
+    </style>
+</head>
+<body>
+    <div class="menu-pane">
+        <a href="/waiter/tables" class="btn-back">⬅ Back to Table Map</a>
+        <h3>Menu Selection — Table {{ table_number }}</h3>
+        
+        <input type="text" id="searchBox" class="input-search" placeholder="🔍 Search dishes by name..." onkeyup="runFilter()">
+
+        <div class="category-tabs">
+            <button class="btn-tab active" onclick="switchTab('all', this)">All Items</button>
+            <button class="btn-tab" onclick="switchTab('appetizers', this)">Appetizers</button>
+            <button class="btn-tab" onclick="switchTab('main-courses', this)">Main Courses</button>
+            <button class="btn-tab" onclick="switchTab('beverages', this)">Beverages</button>
+            <button class="btn-tab" onclick="switchTab('desserts', this)">Desserts</button>
+        </div>
+
+        <div class="dish-grid">
+            {% for dish in dishes %}
+            <div class="dish-card dish-item-wrapper" data-category="{{ dish.Category }}" data-name="{{ dish.Name | lower }}">
+                <span class="badge-status">Available</span>
+                <div>
+                    <h4>{{ dish.Name }}</h4>
+                    <p class="dish-price">{{ dish.Price }} VND</p>
+                    <p class="dish-desc">{{ dish.Description }}</p>
+                    <p class="dish-ingr">Ingredients: {{ dish.Ingredients }}</p>
+                </div>
+                <form action="/waiter/add-to-cart" method="POST">
+                    <input type="hidden" name="table_number" value="{{ table_number }}">
+                    <input type="hidden" name="dish_id" value="{{ dish.DishID }}">
+                    <label style="font-size: 14px; color: #4a5568;">Qty: </label>
+                    <input type="number" name="quantity" value="1" min="1" class="input-qty"><br>
+                    <input type="text" name="special_note" placeholder="Notes..." class="input-note"><br>
+                    <button type="submit" class="btn-add">+ Add Item</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="order-pane">
+        <h3 style="margin-top: 0; color: #2c3e50;">Selected Items</h3>
+        <ul class="order-list">
+            {% if cart_items %}
+                {% for item in cart_items %}
+                <li class="order-item">
+                    <div>
+                        <strong style="color: #2c3e50;">{{ item.name }}</strong>
+                        {% if item.note %}<br><small style="color: #7f8c8d;">📝 {{ item.note }}</small>{% endif %}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-weight: 600; color: #2c3e50;">x{{ item.quantity }}</div>
+                        <form action="/waiter/remove-from-cart" method="POST" style="margin: 0;">
+                            <input type="hidden" name="table_number" value="{{ table_number }}">
+                            <input type="hidden" name="dish_id" value="{{ item.dish_id }}">
+                            <input type="hidden" name="special_note" value="{{ item.note }}">
+                            <button type="submit" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 18px; font-weight: bold;">&times;</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            {% else %}
+                <p style="color: #95a5a6; text-align: center; margin-top: 40px;">No items selected yet</p>
+            {% endif %}
+        </ul>
+        <form action="/waiter/confirm-order" method="POST" style="margin-top: auto; width: 100%;">
+            <input type="hidden" name="table_number" value="{{ table_number }}">
+            <button type="submit" class="btn-confirm" {% if not cart_items %}disabled{% endif %}>CONFIRM & SEND TO KITCHEN</button>
+        </form>
+    </div>
+
+    <script>
+        let currentTabCategory = 'all';
+        function switchTab(category, element) {
+            currentTabCategory = category;
+            document.querySelectorAll('.btn-tab').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            runFilter();
+        }
+        function runFilter() {
+            let keyword = document.getElementById('searchBox').value.toLowerCase().trim();
+            document.querySelectorAll('.dish-item-wrapper').forEach(item => {
+                let cat = item.getAttribute('data-category');
+                let name = item.getAttribute('data-name');
+                let matchCat = (currentTabCategory === 'all' || cat === currentTabCategory);
+                let matchKey = name.includes(keyword);
+                item.style.display = (matchCat && matchKey) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

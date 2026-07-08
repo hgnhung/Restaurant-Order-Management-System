@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - Table {{ table_number }}</title>
+    <style>
+        /* CSS Reset and Viewport Fixes */
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        
+        /* Main Container Card */
+        .container { width: 100%; max-width: 500px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); }
+        
+        /* Metadata Header Section */
+        .header-section { border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-section h3 { margin: 0 0 10px 0; color: #2c3e50; font-size: 22px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px; color: #4a5568; }
+        
+        /* Dynamic Status Badge */
+        .badge-status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        .status-confirmed { background-color: #ebf5fb; color: #2980b9; }
+        .status-preparing { background-color: #f4ecf7; color: #8e44ad; }
+        .status-ready { background-color: #eafaf1; color: #27ae60; }
+        .status-served { background-color: #f2f4f4; color: #7f8c8d; }
+        
+        /* Ordered Items List */
+        .item-list { list-style: none; padding: 0; margin: 20px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        .dish-row { padding: 12px 0; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .dish-name { font-weight: 600; color: #2c3e50; }
+        .dish-note { color: #7f8c8d; font-size: 13px; margin-top: 3px; font-style: italic; }
+        .dish-qty { font-weight: bold; color: #34495e; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 14px; }
+        
+        /* Touch-Friendly Action Buttons */
+        .action-block { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+        .btn-action { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background 0.2s; text-align: center; text-decoration: none; }
+        .btn-serve { background-color: #27ae60; color: white; }
+        .btn-serve:hover { background-color: #219653; }
+        
+        .row-buttons { display: flex; gap: 12px; }
+        .btn-modify { background-color: #3498db; color: white; flex: 1; }
+        .btn-modify:hover { background-color: #2980b9; }
+        .btn-cancel { background-color: #e74c3c; color: white; flex: 1; }
+        .btn-cancel:hover { background-color: #c0392b; }
+        
+        .btn-back-dashboard { background-color: #95a5a6; color: white; }
+        .btn-back-dashboard:hover { background-color: #7f8c8d; }
+        
+        .btn-action:disabled, .btn-action.disabled-style { background-color: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    {% if order %}
+        <div class="header-section">
+            <h3>Order Details — Table {{ table_number }}</h3>
+            <div class="meta-grid">
+                <div><strong>Order ID:</strong> {{ order.OrderID }}</div>
+                <div><strong>Date:</strong> {{ order.OrderDate }}</div>
+                <div style="grid-column: span 2; margin-top: 5px;">
+                    <strong>Status:</strong> 
+                    <span class="badge-status 
+                        {% if order.Status == 'Confirmed' %}status-confirmed
+                        {% elif order.Status == 'Preparing' %}status-preparing
+                        {% elif order.Status == 'Ready' %}status-ready
+                        {% else %}status-served{% endif %}">
+                        {{ order.Status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <h5 style="margin: 0; color: #34495e; font-size: 16px;">Ordered Items</h5>
+        <ul class="item-list">
+            {% if items %}
+                {% for item in items %}
+                <li class="dish-row">
+                    <div>
+                        <span class="dish-name">{{ item.name }}</span>
+                        {% if item.specialNote %}
+                            <div class="dish-note">📝 Ghi chú: {{ item.specialNote }}</div>
+                        {% endif %}
+                    </div>
+                    <span class="dish-qty">x{{ item.quantity }}</span>
+                </li>
+                {% endfor %}
+            {% else %}
+                <p style="color: #95a5a6; text-align: center; padding: 20px 0; margin: 0;">No items found in this order.</p>
+            {% endif %}
+        </ul>
+
+        <div class="action-block">
+            {% if order.Status == 'Ready' %}
+            <form action="/waiter/serve-order" method="POST" style="margin: 0;">
+                <input type="hidden" name="order_id" value="{{ order.OrderID }}">
+                <input type="hidden" name="table_number" value="{{ table_number or order.TableNumber }}">
+                <button type="submit" class="btn-action btn-serve">✓ MARK AS SERVED</button>
+            </form>
+            {% endif %}
+
+            <div class="row-buttons">
+                
+                <a href="/waiter/order?table={{ table_number }}" 
+                   class="btn-action btn-modify {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled-style{% endif %}">
+                   ✏ Modify Order
+                </a>
+                <form action="/waiter/cancel-order" method="POST" style="flex: 1; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                    <input type="hidden" name="order_id" value="{{ order.OrderID }}">
+                    <button type="submit" class="btn-action btn-cancel" 
+                            {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled{% endif %}>
+                            ❌ Cancel Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #95a5a6; padding: 40px 0;">No active order found for this table.</p>
+    {% endif %}
+    
+    <a href="/waiter/tables" class="btn-action btn-back-dashboard" style="margin-top: 12px;">Back to Table Map</a>
+</div>
+
+</body>
+</html>
