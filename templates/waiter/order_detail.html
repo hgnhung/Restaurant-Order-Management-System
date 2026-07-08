@@ -98,6 +98,7 @@
             {% if order.Status == 'Ready' %}
             <form action="/waiter/serve-order" method="POST" style="margin: 0;">
                 <input type="hidden" name="order_id" value="{{ order.OrderID }}">
+                <input type="hidden" name="table_number" value="{{ table_number or order.TableNumber }}">
                 <button type="submit" class="btn-action btn-serve">✓ MARK AS SERVED (ĐÃ PHỤC VỤ MÓN)</button>
             </form>
             {% endif %}
