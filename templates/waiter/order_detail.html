@@ -46,7 +46,6 @@
         .btn-back-dashboard { background-color: #95a5a6; color: white; }
         .btn-back-dashboard:hover { background-color: #7f8c8d; }
         
-        /* Disabled State styling for grayed-out look */
         .btn-action:disabled, .btn-action.disabled-style { background-color: #cbd5e1 !important; color: #94a3b8 !important; cursor: not-allowed; opacity: 0.6; pointer-events: none; }
     </style>
 </head>
@@ -54,7 +53,6 @@
 
 <div class="container">
     {% if order %}
-        <!-- ĐÁP ỨNG ĐẶT TẢ: Hiển thị đầy đủ Metadata Order ID, Thời gian tạo, Trạng thái đơn hàng -->
         <div class="header-section">
             <h3>Order Details — Table {{ table_number }}</h3>
             <div class="meta-grid">
@@ -62,7 +60,6 @@
                 <div><strong>Date:</strong> {{ order.OrderDate }}</div>
                 <div style="grid-column: span 2; margin-top: 5px;">
                     <strong>Status:</strong> 
-                    <!-- Đổi màu sắc nhãn động dựa trên trạng thái thực tế từ SQL Server -->
                     <span class="badge-status 
                         {% if order.Status == 'Confirmed' %}status-confirmed
                         {% elif order.Status == 'Preparing' %}status-preparing
@@ -94,7 +91,6 @@
         </ul>
 
         <div class="action-block">
-            <!-- ĐỦ ĐIỀU KIỆN: Chỉ hiện nút MARK AS SERVED khi bếp báo chín xong (Status == 'Ready') -->
             {% if order.Status == 'Ready' %}
             <form action="/waiter/serve-order" method="POST" style="margin: 0;">
                 <input type="hidden" name="order_id" value="{{ order.OrderID }}">
@@ -104,13 +100,11 @@
             {% endif %}
 
             <div class="row-buttons">
-                <!-- CHỐT CHẶN TRẠNG THÁI (Use-case 4.6): Tự động mờ xám và khóa nút Sửa nếu đơn đã sang Preparing trở đi -->
+                
                 <a href="/waiter/order?table={{ table_number }}" 
                    class="btn-action btn-modify {% if order.Status != 'Confirmed' and order.Status != 'Draft' %}disabled-style{% endif %}">
                    ✏ Modify Order
                 </a>
-
-                <!-- ẨN/KHÓA NÚT CANCEL: Tự động khóa tính năng nếu bếp đang nấu (Preparing) để bảo toàn quy trình nghiệp vụ -->
                 <form action="/waiter/cancel-order" method="POST" style="flex: 1; margin: 0;" onsubmit="return confirm('Are you sure you want to cancel this order?');">
                     <input type="hidden" name="order_id" value="{{ order.OrderID }}">
                     <button type="submit" class="btn-action btn-cancel" 
